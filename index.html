@@ -1,107 +1,127 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MeuTube</title>
-    <link rel="stylesheet" href="meutube.css" />
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeuTube - CFO da Alma e dos Negócios</title>
+    <link rel="stylesheet" href="meutube.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="pagina">
+        <!-- TOPO / HEADER -->
+        <header id="topo">
+            <div id="logo">
+                <img src="https://img.icons8.com/color/96/youtube-play.png" alt="Logo">
+                Meu<span>Tube</span>
+            </div>
+            
+            <div id="search-box">
+                <input type="text" id="search-input" placeholder="Pesquisar vídeos...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <nav id="menu">
+                <ul>
+                    <li><a href="#" class="active" data-page="inicio"><i class="fas fa-home"></i> Início</a></li>
+                    <li><a href="#" data-page="favoritos"><i class="fas fa-heart"></i> Favoritos</a></li>
+                    <li><a href="#" data-page="meus-videos"><i class="fas fa-video"></i> Meus Vídeos</a></li>
+                    <li><a href="#" data-page="cursos"><i class="fas fa-graduation-cap"></i> Cursos</a></li>
+                    <li><a href="#" id="btn-sair"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
+        </header>
 
-    <!--aqui é pra colocar o fav icon lá em cima-->
-    <link rel="shortcut icon" href="imagens/icone.ico" type="imagens/x-ico" />
-  </head>
-  <body>
-    <!--quando um usuário deficiente audio visual abre o site vai dizer assim voce está na sessão pagina
-  
-  Na sessão pagina vai ter a 
-  barra do topo
-  video
-  menu lateral
-  footer
--->
-    <section id="pagina">
-      <!--Em cima agente usa a tag **HEAD** que é o cabeçalho do site. Lembra o HEAD ele é o cabeçalho da pagina ele não aparece. Já o HEADER vai aparece POIS ELE é o cabeçalho do site-->
-      <header id="topo">
-        <div id="logo">
-          <img src="imagens/youtube.png" /> <span>Meu</span>Tube
+        <!-- ÁREA PRINCIPAL -->
+        <main id="conteudo-principal">
+            <!-- PLAYER PRINCIPAL -->
+            <section id="player">
+                <div id="video-container">
+                    <video id="video-principal" controls autoplay>
+                        <source src="" type="video/mp4">
+                        Seu navegador não suporta vídeo.
+                    </video>
+                    <div id="video-overlay">
+                        <h2 id="video-titulo">Bem-vindo ao MeuTube</h2>
+                        <p id="video-descricao">Selecione um vídeo para assistir</p>
+                    </div>
+                </div>
+                
+                <div id="video-info">
+                    <div id="video-stats">
+                        <span id="video-views"><i class="fas fa-eye"></i> 0 visualizações</span>
+                        <span id="video-data"><i class="fas fa-calendar"></i> --/--/----</span>
+                    </div>
+                    <div id="video-actions">
+                        <button id="btn-like" title="Curtir"><i class="fas fa-thumbs-up"></i> <span id="like-count">0</span></button>
+                        <button id="btn-favoritar" title="Favoritar"><i class="fas fa-heart"></i> Favoritar</button>
+                        <button id="btn-compartilhar" title="Compartilhar"><i class="fas fa-share"></i> Compartilhar</button>
+                    </div>
+                </div>
+
+                <!-- COMENTÁRIOS -->
+                <div id="comentarios">
+                    <h3><i class="fas fa-comments"></i> Comentários</h3>
+                    <div id="form-comentario">
+                        <textarea id="input-comentario" placeholder="Escreva seu comentário..." rows="3"></textarea>
+                        <button id="btn-comentar"><i class="fas fa-paper-plane"></i> Comentar</button>
+                    </div>
+                    <div id="lista-comentarios"></div>
+                </div>
+            </section>
+
+            <!-- VÍDEOS RELACIONADOS -->
+            <aside id="relacionados">
+                <h3><i class="fas fa-list"></i> Próximos Vídeos</h3>
+                <div id="carousel-container">
+                    <ul id="lista-videos"></ul>
+                </div>
+            </aside>
+        </main>
+
+        <!-- FOOTER -->
+        <footer id="footer">
+            <p>© 2026 <span>MeuTube</span> - CFO da Alma e dos Negócios | Prof. Luciano Francisco</p>
+            <p>Todos os direitos reservados</p>
+        </footer>
+    </div>
+
+    <!-- MODAL PARA ADICIONAR VÍDEO -->
+    <div id="modal-adicionar" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><i class="fas fa-plus-circle"></i> Adicionar Novo Vídeo</h2>
+            <form id="form-novo-video">
+                <label>Título do Vídeo:</label>
+                <input type="text" id="novo-titulo" required placeholder="Digite o título">
+                
+                <label>URL do Vídeo (MP4 ou YouTube):</label>
+                <input type="url" id="novo-url" required placeholder="https://...">
+                
+                <label>Thumbnail (URL da imagem):</label>
+                <input type="url" id="novo-thumb" placeholder="https://...">
+                
+                <label>Descrição:</label>
+                <textarea id="novo-descricao" rows="3" placeholder="Descreva o vídeo..."></textarea>
+                
+                <label>Categoria:</label>
+                <select id="novo-categoria">
+                    <option value="geral">Geral</option>
+                    <option value="curso">Curso</option>
+                    <option value="tutorial">Tutorial</option>
+                    <option value="motivacional">Motivacional</option>
+                </select>
+                
+                <button type="submit"><i class="fas fa-save"></i> Salvar Vídeo</button>
+            </form>
         </div>
-        <nav>
-          <ul id="menu">
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#">Favorito</a></li>
-            <li><a href="#">Meus Videos</a></li>
-            <li><a href="#">Sair</a></li>
-          </ul>
-        </nav>
-      </header>
+    </div>
 
-      <!--O MAIN é o principal do meu site o que ela vai ver aqui é neste caso o video-->
-      <main id="player">
-        <!--controls é uma função boleana para aparecer o player do video-->
-        <!--<div>-->
-        <video controls>
-          <source src="videos/1.mp4" type="video/mp4" />
-          <source src="videos/2.mp4" type="video/mp4" />
-          <source src="videos/3.mp4" type="video/mp4" />
-        </video>
+    <!-- BOTÃO FLUTUANTE PARA ADICIONAR -->
+    <button id="fab-adicionar" title="Adicionar Vídeo">
+        <i class="fas fa-plus"></i>
+    </button>
 
-        <textarea placeholder="Escreva seu comentário..."></textarea>
-        <!--</div>-->
-      </main>
-
-      <!--ASIDE seria um menu auxiliar para o seu site-->
-      <aside id="relacionados">
-        <!--Cria um lista-->
-        <ul>
-          <!--Pra cada video uma <li> para cada <li> um <a> pra cada <a> uma imagem e essas imagem vai da pasta imagens/relacionadas.-->
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href="meutube/imagens/relacionados.jpg"></a></li><li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href="meutube/imagens/relacionados.jpg"></a></li><li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href="meutube/imagens/relacionados.jpg"></a></li><li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-          <li><a href="meutube/imagens/relacionados.jpg"></a></li><li><a href=""><img src="imagens/relacionados.jpg"></a></li>
-        </ul>
-      </aside>
-      <footer id="footer">
-        &copy; Todos os direitos reservados <span>Prof. Luciano Francsico</span>
-      </footer>
-    </section>
-  </body>
+    <script src="meutube.js"></script>
+</body>
 </html>
-
-<!--LAYOUT que cresce de acordo ao tamanho da tela chama-se layout elastico 
-  LAYOUT FUIDO esse layout que vai se esticando para atende o layout da pagina para atender as dimensoes da pagina que é o primeiro layout que fizemso. 
-
-LAYOUT FIXO - Agente redimenciona a janela e quando a pagina chegar na resolução de 1096, ou seja, no especificada do parametro  ela cria barras abaixo.
-WIDTH: 1096;
-MARGIN: AUTO;
-
-LAYOUT HIBRIDO - Mistura as duas tecnologias a do fluido com a do fixo. Ele conforme ele vai diminuido ele vai se ajustando porem vai chegar umcerto tamanho que ele vai corta e ai aparecer a barra de rolagem para você ver o resto.
-MAX-WIDTH:1096px;
-MIN-WIDTH:700px;
-MARGIN: AUTO;
-
-LAYOUT ELASTICO - Ele é configurado proprocionalmente ao tamanho da fonte ele fica igual aqueles site pra acessibilidade se aumentar a janela aumenta as letras aumenta tudo mais para isso tem que mudar todas as fontes para o padrão (EM) E todas as resoluções, ou seja, e larguras também para o padrão (EM). É como se colocasse o botão de zoom do navegador no seu site ele vai crescer juntinho com o zooom.
-WIDTH:50em;
-MARGIN: AUTO;
-
-
-LAYOUT RESPONSIVO - Ele PARECE COMO O PADRÃO HIBRIDO VOCÊ VAI PLANEJAR UMA RESOLUÇÃO MAXIMA E UMA MINIMA. Só que voc~e não vai mudar só o limitando voc~e não vai só limitar você vai alterar o CSS para este tipo de resolução
-
-EXEMPLO:
-abaixo do footer 
-media screen and (max-widht:700px){
-aqui dentro voc~e pode alterar o css todinho que vc quer do seu site.
-e ele fica responsivo.
-} 
--->
