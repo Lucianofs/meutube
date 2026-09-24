@@ -12,7 +12,7 @@
         <!-- TOPO / HEADER -->
         <header id="topo">
             <div id="logo">
-                <img src="https://img.icons8.com/color/96/youtube-play.png" alt="Logo">
+                <i class="fab fa-youtube" style="color: #ff0000; font-size: 40px;"></i>
                 Meu<span>Tube</span>
             </div>
             
@@ -25,7 +25,6 @@
                 <ul>
                     <li><a href="#" class="active" data-page="inicio"><i class="fas fa-home"></i> Início</a></li>
                     <li><a href="#" data-page="favoritos"><i class="fas fa-heart"></i> Favoritos</a></li>
-                    <li><a href="#" data-page="meus-videos"><i class="fas fa-video"></i> Meus Vídeos</a></li>
                     <li><a href="#" data-page="cursos"><i class="fas fa-graduation-cap"></i> Cursos</a></li>
                     <li><a href="#" id="btn-sair"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -37,25 +36,23 @@
             <!-- PLAYER PRINCIPAL -->
             <section id="player">
                 <div id="video-container">
-                    <video id="video-principal" controls autoplay>
-                        <source src="" type="video/mp4">
-                        Seu navegador não suporta vídeo.
-                    </video>
-                    <div id="video-overlay">
-                        <h2 id="video-titulo">Bem-vindo ao MeuTube</h2>
-                        <p id="video-descricao">Selecione um vídeo para assistir</p>
-                    </div>
+                    <!-- O JS vai injetar aqui ou <video> ou <iframe> -->
+                    <div id="media-wrapper"></div>
                 </div>
                 
                 <div id="video-info">
+                    <h2 id="video-titulo">Bem-vindo ao MeuTube</h2>
                     <div id="video-stats">
                         <span id="video-views"><i class="fas fa-eye"></i> 0 visualizações</span>
                         <span id="video-data"><i class="fas fa-calendar"></i> --/--/----</span>
                     </div>
+                    <p id="video-descricao">Selecione um vídeo para assistir</p>
+                    
                     <div id="video-actions">
                         <button id="btn-like" title="Curtir"><i class="fas fa-thumbs-up"></i> <span id="like-count">0</span></button>
                         <button id="btn-favoritar" title="Favoritar"><i class="fas fa-heart"></i> Favoritar</button>
                         <button id="btn-compartilhar" title="Compartilhar"><i class="fas fa-share"></i> Compartilhar</button>
+                        <button id="btn-deletar-video" title="Excluir Vídeo" style="background: #333; color: #ff4444;"><i class="fas fa-trash"></i> Excluir</button>
                     </div>
                 </div>
 
@@ -72,17 +69,14 @@
 
             <!-- VÍDEOS RELACIONADOS -->
             <aside id="relacionados">
-                <h3><i class="fas fa-list"></i> Próximos Vídeos</h3>
-                <div id="carousel-container">
-                    <ul id="lista-videos"></ul>
-                </div>
+                <h3 id="titulo-relacionados"><i class="fas fa-list"></i> Próximos Vídeos</h3>
+                <ul id="lista-videos"></ul>
             </aside>
         </main>
 
         <!-- FOOTER -->
         <footer id="footer">
             <p>© 2026 <span>MeuTube</span> - CFO da Alma e dos Negócios | Prof. Luciano Francisco</p>
-            <p>Todos os direitos reservados</p>
         </footer>
     </div>
 
@@ -95,11 +89,15 @@
                 <label>Título do Vídeo:</label>
                 <input type="text" id="novo-titulo" required placeholder="Digite o título">
                 
-                <label>URL do Vídeo (MP4 ou YouTube):</label>
-                <input type="url" id="novo-url" required placeholder="https://...">
+                <label>Opção 1: URL do YouTube ou MP4:</label>
+                <input type="url" id="novo-url" placeholder="https://youtu.be/... ou https://...mp4">
+                
+                <label>Opção 2: Fazer Upload do Arquivo (MP4):</label>
+                <input type="file" id="novo-arquivo" accept="video/mp4,video/x-m4v,video/*">
+                <small style="color: #aaa; font-size: 12px;">*Uploads ficam salvos apenas nesta sessão do navegador.</small>
                 
                 <label>Thumbnail (URL da imagem):</label>
-                <input type="url" id="novo-thumb" placeholder="https://...">
+                <input type="url" id="novo-thumb" placeholder="https://... (deixe em branco para padrão)">
                 
                 <label>Descrição:</label>
                 <textarea id="novo-descricao" rows="3" placeholder="Descreva o vídeo..."></textarea>
@@ -117,7 +115,7 @@
         </div>
     </div>
 
-    <!-- BOTÃO FLUTUANTE PARA ADICIONAR -->
+    <!-- BOTÃO FLUTUANTE -->
     <button id="fab-adicionar" title="Adicionar Vídeo">
         <i class="fas fa-plus"></i>
     </button>
