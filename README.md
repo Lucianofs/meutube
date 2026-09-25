@@ -38,9 +38,13 @@ Uma plataforma moderna e completa de vídeos, inspirada no YouTube e Netflix, cr
 - **Font Awesome** - Ícones profissionais
 - **Local Storage** - Persistência de dados
 
+##  Link
+https://lucianofs.github.io/meutube/
+
 ## 📦 Como Usar
 
 ### 1. Clone o Repositório
 ```bash
 git clone https://github.com/lucianofs/meutube.git
 cd meutube
+
