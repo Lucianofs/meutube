@@ -3,115 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    
-    <!-- SEO MÁXIMO - OTIMIZAÇÃO COMPLETA -->
-    <title>MeuTube - Plataforma Gratuita de Vídeos | CFO da Alma e dos Negócios</title>
-    <meta name="description" content="MeuTube - Publique seus vídeos gratuitamente e seja visto no Brasil e no mundo sem pagar tráfego. Plataforma do CFO da Alma e dos Negócios - Prof. Luciano Francisco. SEO otimizado para máxima visibilidade.">
-    <meta name="keywords" content="MeuTube, vídeos gratuitos, publicar vídeos, SEO vídeos, CFO da Alma, Luciano Francisco, marketing digital, consultoria, plataforma de vídeos grátis, tráfego orgânico">
-    <meta name="author" content="Prof. Luciano Francisco - CFO da Alma e dos Negócios">
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    <meta name="googlebot" content="index, follow">
-    <link rel="canonical" href="https://lucianofs.github.io/meutube/">
-    <meta name="language" content="Portuguese">
-    <meta name="revisit-after" content="1 day">
-    
-    <!-- OPEN GRAPH - WHATSAPP/FACEBOOK/LINKEDIN -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lucianofs.github.io/meutube/">
-    <meta property="og:title" content="MeuTube - Publique Vídeos Grátis | CFO da Alma e dos Negócios">
-    <meta property="og:description" content="Plataforma 100% gratuita! Publique seus vídeos e seja visto no Brasil e mundo sem pagar tráfego. SEO otimizado automaticamente.">
-    <meta property="og:image" content="https://lucianofs.github.io/meutube/assets/logo-share.jpg">
-    <meta property="og:site_name" content="MeuTube - Prof. Luciano Francisco">
-    <meta property="og:locale" content="pt_BR">
-    <meta property="og:updated_time" content="2026-09-25">
-    
-    <!-- TWITTER CARDS -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="MeuTube - Vídeos Grátis com SEO Otimizado">
-    <meta name="twitter:description" content="Publique vídeos gratuitamente e alcance o Brasil e mundo sem pagar tráfego pago.">
-    <meta name="twitter:image" content="https://lucianofs.github.io/meutube/assets/logo-share.jpg">
-    <meta name="twitter:creator" content="@lucianofs">
-    
-    <!-- SCHEMA.ORG JSON-LD - SEO AVANÇADO GOOGLE -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "MeuTube",
-      "alternateName": "CFO da Alma e dos Negócios",
-      "url": "https://lucianofs.github.io/meutube/",
-      "author": {
-        "@type": "Person",
-        "name": "Prof. Luciano Francisco",
-        "email": "professorluciano1@gmail.com",
-        "jobTitle": "CFO da Alma e dos Negócios",
-        "description": "Consultoria em análise de dados de marketing e levantamento empresarial"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "CFO da Alma e dos Negócios",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://lucianofs.github.io/meutube/assets/logo-share.jpg"
-        }
-      },
-      "description": "Plataforma gratuita de publicação de vídeos com SEO otimizado para máxima visibilidade nacional e internacional sem pagamento de tráfego",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://lucianofs.github.io/meutube/?search={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-    
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "VideoObject",
-      "name": "MeuTube - Plataforma de Vídeos",
-      "description": "Vídeos publicados na plataforma MeuTube com SEO otimizado",
-      "thumbnailUrl": "https://lucianofs.github.io/meutube/assets/logo-share.jpg",
-      "uploadDate": "2026-09-25",
-      "duration": "PT0S",
-      "author": {
-        "@type": "Person",
-        "name": "Prof. Luciano Francisco"
-      }
-    }
-    </script>
-
+    <title>MeuTube - CFO da Alma e dos Negócios | Login</title>
     <link rel="stylesheet" href="meutube.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
-    <!-- TELA DE LOGIN -->
-    <div id="login-screen">
-        <div class="login-container">
-            <div class="login-logo">
-                <i class="fab fa-youtube" style="color: #ff0000; font-size: 60px;"></i>
+    <!-- TELA DE LOGIN/CADASTRO -->
+    <div id="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="logo-container">
+                    <i class="fab fa-youtube" style="color: #ff0000; font-size: 60px;"></i>
+                </div>
                 <h1>Meu<span>Tube</span></h1>
+                <p class="subtitle">CFO da Alma e dos Negócios</p>
+                <p class="description">Consultoria em Análise de Dados de Marketing</p>
             </div>
-            <h2>CFO da Alma e dos Negócios</h2>
-            <p class="login-subtitle">Consultoria em Análise de Dados de Marketing</p>
-            
-            <form id="login-form">
+
+            <!-- TABS LOGIN/CADASTRO -->
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="showTab('login')">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+                <button class="tab-btn" onclick="showTab('register')">
+                    <i class="fas fa-user-plus"></i> Cadastrar
+                </button>
+            </div>
+
+            <!-- FORMULÁRIO DE LOGIN -->
+            <form id="login-form" class="auth-form active">
                 <div class="form-group">
                     <label><i class="fas fa-envelope"></i> Email:</label>
-                    <input type="email" id="login-email" required placeholder="seu@email.com">
+                    <input type="email" id="login-email" required placeholder="seu@email.com" autocomplete="email">
                 </div>
+                
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> Senha:</label>
-                    <input type="password" id="login-senha" required placeholder="••••••••">
+                    <div class="password-input">
+                        <input type="password" id="login-senha" required placeholder="••••••••" autocomplete="current-password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('login-senha')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Entrar na Plataforma
+                </button>
+
+                <div class="form-footer">
+                    <p>Primeiro acesso? <a href="#" onclick="showTab('register'); return false;">Crie sua conta</a></p>
+                </div>
             </form>
-            
-            <div class="login-info">
-                <p><i class="fas fa-info-circle"></i> <strong>Usuário Demo:</strong></p>
-                <p>Email: professorluciano1@gmail.com</p>
-                <p>Senha: Deuseamor1@</p>
+
+            <!-- FORMULÁRIO DE CADASTRO -->
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Nome Completo:</label>
+                    <input type="text" id="register-nome" required placeholder="Seu nome completo">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email:</label>
+                    <input type="email" id="register-email" required placeholder="seu@email.com" autocomplete="email">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-briefcase"></i> Título/Cargo:</label>
+                    <input type="text" id="register-titulo" placeholder="Ex: Consultor, Empreendedor, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Senha:</label>
+                    <div class="password-input">
+                        <input type="password" id="register-senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                        <button type="button" class="toggle-password" onclick="togglePassword('register-senha')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <small class="form-hint">Sua senha será criptografada e segura</small>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirmar Senha:</label>
+                    <input type="password" id="register-confirm" required placeholder="Repita a senha">
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-user-plus"></i> Criar Conta Gratuita
+                </button>
+
+                <div class="form-footer">
+                    <p>Já tem conta? <a href="#" onclick="showTab('login'); return false;">Faça login</a></p>
+                </div>
+            </form>
+
+            <!-- INFO SEGURANÇA -->
+            <div class="security-notice">
+                <i class="fas fa-shield-alt"></i>
+                <p>Ambiente seguro. Seus dados estão protegidos.</p>
             </div>
         </div>
     </div>
@@ -229,7 +219,7 @@
                     <small style="color:#0f0; font-size:11px;">✓ Se não preencher, usaremos a thumbnail automática do YouTube</small>
                     
                     <label>Descrição (SEO Otimizado):</label>
-                    <textarea id="video-descricao-input" rows="3" placeholder="Descrição completa com palavras-chave para melhor posicionamento"></textarea>
+                    <textarea id="video-descricao-input" rows="3" placeholder="Descrição completa com palavras-chave"></textarea>
                     
                     <label>Categoria:</label>
                     <select id="video-categoria">
