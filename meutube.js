@@ -1,775 +1,578 @@
-// SISTEMA DE AUTENTICAÇÃO SEGURO
-class AuthSystem {
-    constructor() {
-        this.usersKey = 'meutube_users';
-        this.currentUserKey = 'meutube_current_user';
-        this.initAdmin();
+// ===== AUTENTICAÇÃO =====
+const AUTH_KEY = 'mt_users';
+const USER_KEY = 'mt_user_atual';
+
+function hashSenha(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h = h & h;
     }
-    
-    simpleHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return Math.abs(hash).toString(16);
-    }
-    
-    initAdmin() {
-        const users = localStorage.getItem(this.usersKey);
-        if (!users) {
-            const adminUser = {
-                email: 'professorluciano1@gmail.com',
-                nome: 'Prof. Luciano Francisco',
-                senhaHash: this.simpleHash('Deuseamor1@'),
-                nomeCanal: 'CFO da Alma e dos Negócios',
-                descricaoCanal: 'Consultoria em análise de dados de marketing',
-                capaCanal: '',
-                createdAt: new Date().toISOString()
-            };
-            localStorage.setItem(this.usersKey, JSON.stringify([adminUser]));
-        }
-    }
-    
-    register(nome, email, senha) {
-        const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
-        
-        if (users.find(u => u.email === email)) {
-            return { success: false, message: 'Email já cadastrado!' };
-        }
-        
-        const newUser = {
-            email: email,
-            nome: nome,
-            senhaHash: this.simpleHash(senha),
-            nomeCanal: nome,
-            descricaoCanal: '',
-            capaCanal: '',
-            createdAt: new Date().toISOString()
+    return Math.abs(h).toString(16);
+}
+
+function initAuth() {
+    if (!localStorage.getItem(AUTH_KEY)) {
+        const admin = {
+            email: 'professorluciano1@gmail.com',
+            nome: 'Prof. Luciano Francisco',
+            senhaHash: hashSenha('Deuseamor1@'),
+            nomeCanal: 'CFO da Alma e dos Negócios',
+            descCanal: 'Consultoria em análise de dados de marketing',
+            capaCanal: ''
         };
-        
-        users.push(newUser);
-        localStorage.setItem(this.usersKey, JSON.stringify(users));
-        
-        return { success: true, message: 'Cadastro realizado!' };
-    }
-    
-    login(email, senha) {
-        const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
-        const user = users.find(u => u.email === email);
-        
-        if (!user || user.senhaHash !== this.simpleHash(senha)) {
-            return { success: false, message: 'Email ou senha incorretos!' };
-        }
-        
-        const { senhaHash: _, ...userSafe } = user;
-        localStorage.setItem(this.currentUserKey, JSON.stringify(userSafe));
-        
-        return { success: true, user: userSafe };
-    }
-    
-    updateUser(userData) {
-        const users = JSON.parse(localStorage.getItem(this.usersKey) || '[]');
-        const currentUser = this.getCurrentUser();
-        
-        const index = users.findIndex(u => u.email === currentUser.email);
-        if (index !== -1) {
-            users[index] = { ...users[index], ...userData };
-            localStorage.setItem(this.usersKey, JSON.stringify(users));
-            
-            const { senhaHash: _, ...updatedUser } = users[index];
-            localStorage.setItem(this.currentUserKey, JSON.stringify(updatedUser));
-            return updatedUser;
-        }
-        return null;
-    }
-    
-    logout() {
-        localStorage.removeItem(this.currentUserKey);
-    }
-    
-    getCurrentUser() {
-        const user = localStorage.getItem(this.currentUserKey);
-        return user ? JSON.parse(user) : null;
-    }
-    
-    isAuthenticated() {
-        return this.getCurrentUser() !== null;
+        localStorage.setItem(AUTH_KEY, JSON.stringify([admin]));
     }
 }
 
-// BANCO DE DADOS - ISOLADO POR USUÁRIO
-class MeuTubeDB {
-    constructor() {
-        this.videosKey = 'meutube_videos';
-        this.favoritosKey = 'meutube_favoritos';
-        this.comentariosKey = 'meutube_comentarios';
-        this.likesKey = 'meutube_likes';
-        
-        this.videos = JSON.parse(localStorage.getItem(this.videosKey)) || [];
-        this.favoritos = JSON.parse(localStorage.getItem(this.favoritosKey)) || [];
-        this.comentarios = JSON.parse(localStorage.getItem(this.comentariosKey)) || {};
-        this.likes = JSON.parse(localStorage.getItem(this.likesKey)) || {};
+function cadastrar(nome, email, senha) {
+    const users = JSON.parse(localStorage.getItem(AUTH_KEY) || '[]');
+    if (users.find(u => u.email === email)) {
+        return { ok: false, msg: 'Email já cadastrado!' };
     }
-    
-    salvar() {
-        localStorage.setItem(this.videosKey, JSON.stringify(this.videos));
-        localStorage.setItem(this.favoritosKey, JSON.stringify(this.favoritos));
-        localStorage.setItem(this.comentariosKey, JSON.stringify(this.comentarios));
-        localStorage.setItem(this.likesKey, JSON.stringify(this.likes));
+    users.push({
+        email, nome,
+        senhaHash: hashSenha(senha),
+        nomeCanal: nome,
+        descCanal: '',
+        capaCanal: ''
+    });
+    localStorage.setItem(AUTH_KEY, JSON.stringify(users));
+    return { ok: true, msg: 'Cadastro realizado! Faça login.' };
+}
+
+function login(email, senha) {
+    const users = JSON.parse(localStorage.getItem(AUTH_KEY) || '[]');
+    const user = users.find(u => u.email === email);
+    if (!user || user.senhaHash !== hashSenha(senha)) {
+        return { ok: false, msg: 'Email ou senha incorretos!' };
     }
-    
-    // ADICIONA VÍDEO SOMENTE DO USUÁRIO LOGADO
-    adicionarVideo(videoData) {
-        const user = auth.getCurrentUser();
-        if (!user) return null;
-        
-        const video = {
+    const { senhaHash, ...safe } = user;
+    localStorage.setItem(USER_KEY, JSON.stringify(safe));
+    return { ok: true, user: safe };
+}
+
+function getUser() {
+    const u = localStorage.getItem(USER_KEY);
+    return u ? JSON.parse(u) : null;
+}
+
+function logout() {
+    localStorage.removeItem(USER_KEY);
+}
+
+function updateUser(data) {
+    const users = JSON.parse(localStorage.getItem(AUTH_KEY) || '[]');
+    const current = getUser();
+    const idx = users.findIndex(u => u.email === current.email);
+    if (idx !== -1) {
+        users[idx] = { ...users[idx], ...data };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(users));
+        const { senhaHash, ...safe } = users[idx];
+        localStorage.setItem(USER_KEY, JSON.stringify(safe));
+        return safe;
+    }
+    return null;
+}
+
+// ===== BANCO DE DADOS =====
+const DB = {
+    get videos() { return JSON.parse(localStorage.getItem('mt_videos') || '[]'); },
+    set videos(v) { localStorage.setItem('mt_videos', JSON.stringify(v)); },
+    get favs() { return JSON.parse(localStorage.getItem('mt_favs') || '[]'); },
+    set favs(f) { localStorage.setItem('mt_favs', JSON.stringify(f)); },
+    get comments() { return JSON.parse(localStorage.getItem('mt_comments') || '{}'); },
+    set comments(c) { localStorage.setItem('mt_comments', JSON.stringify(c)); },
+    get likes() { return JSON.parse(localStorage.getItem('mt_likes') || '{}'); },
+    set likes(l) { localStorage.setItem('mt_likes', JSON.stringify(l)); },
+
+    meusVideos() {
+        const u = getUser();
+        if (!u) return [];
+        return this.videos.filter(v => v.autorEmail === u.email);
+    },
+
+    addVideo(data) {
+        const u = getUser();
+        if (!u) return null;
+        const v = {
             id: Date.now(),
-            ...videoData,
+            ...data,
             views: 0,
             data: new Date().toISOString().split('T')[0],
-            autorEmail: user.email,
-            autorNome: user.nomeCanal || user.nome
+            autorEmail: u.email,
+            autorNome: u.nomeCanal || u.nome
         };
-        
-        this.videos.push(video);
-        this.salvar();
-        return video;
-    }
-    
-    atualizarVideo(id, dadosAtualizados) {
-        const index = this.videos.findIndex(v => v.id === parseInt(id));
-        if (index !== -1) {
-            this.videos[index] = { ...this.videos[index], ...dadosAtualizados };
-            this.salvar();
-            return this.videos[index];
+        const vids = this.videos;
+        vids.push(v);
+        this.videos = vids;
+        return v;
+    },
+
+    updateVideo(id, data) {
+        const vids = this.videos;
+        const idx = vids.findIndex(v => v.id === parseInt(id));
+        if (idx !== -1) {
+            vids[idx] = { ...vids[idx], ...data };
+            this.videos = vids;
+            return vids[idx];
         }
         return null;
-    }
-    
-    deletarVideo(id) {
+    },
+
+    deleteVideo(id) {
         this.videos = this.videos.filter(v => v.id !== id);
-        this.favoritos = this.favoritos.filter(f => f !== id);
-        delete this.comentarios[id];
-        delete this.likes[id];
-        this.salvar();
-    }
-    
-    // BUSCA VÍDEOS APENAS DO USUÁRIO LOGADO
-    getMeusVideos() {
-        const user = auth.getCurrentUser();
-        if (!user) return [];
-        return this.videos.filter(v => v.autorEmail === user.email);
-    }
-    
-    getVideo(id) {
-        return this.videos.find(v => v.id === parseInt(id));
-    }
-    
-    incrementarViews(id) {
-        const video = this.getVideo(id);
-        if (video) {
-            video.views++;
-            this.salvar();
-        }
-    }
-    
-    toggleFavorito(id) {
-        const index = this.favoritos.indexOf(id);
-        if (index > -1) {
-            this.favoritos.splice(index, 1);
-        } else {
-            this.favoritos.push(id);
-        }
-        this.salvar();
-        return this.favoritos.includes(id);
-    }
-    
-    isFavorito(id) {
-        return this.favoritos.includes(id);
-    }
-    
-    adicionarComentario(videoId, texto) {
-        const user = auth.getCurrentUser();
-        if (!this.comentarios[videoId]) this.comentarios[videoId] = [];
-        
-        this.comentarios[videoId].unshift({
+        this.favs = this.favs.filter(f => f !== id);
+        const c = this.comments;
+        delete c[id];
+        this.comments = c;
+        const l = this.likes;
+        delete l[id];
+        this.likes = l;
+    },
+
+    getVideo(id) { return this.videos.find(v => v.id === parseInt(id)); },
+
+    addView(id) {
+        const v = this.getVideo(id);
+        if (v) { v.views++; this.videos = this.videos; }
+    },
+
+    toggleFav(id) {
+        const f = this.favs;
+        const idx = f.indexOf(id);
+        if (idx > -1) f.splice(idx, 1);
+        else f.push(id);
+        this.favs = f;
+        return f.includes(id);
+    },
+
+    isFav(id) { return this.favs.includes(id); },
+
+    addComment(vidId, texto) {
+        const u = getUser();
+        const c = this.comments;
+        if (!c[vidId]) c[vidId] = [];
+        c[vidId].unshift({
             id: Date.now(),
-            autor: user ? user.nome : 'Visitante',
-            texto: texto,
+            autor: u ? u.nome : 'Visitante',
+            texto,
             data: new Date().toLocaleString('pt-BR')
         });
-        this.salvar();
-    }
-    
-    getComentarios(videoId) {
-        return this.comentarios[videoId] || [];
-    }
-    
-    toggleLike(videoId) {
-        if (!this.likes[videoId]) this.likes[videoId] = 0;
-        this.likes[videoId]++;
-        this.salvar();
-        return this.likes[videoId];
-    }
-    
-    getLikes(videoId) {
-        return this.likes[videoId] || 0;
-    }
-    
-    buscarVideos(termo) {
-        const user = auth.getCurrentUser();
-        if (!user) return [];
-        
-        termo = termo.toLowerCase();
-        return this.videos.filter(v => 
-            v.autorEmail === user.email &&
-            (v.titulo.toLowerCase().includes(termo) || 
-             v.descricao.toLowerCase().includes(termo) ||
-             v.categoria.toLowerCase().includes(termo))
-        );
-    }
-    
-    getVideosPorCategoria(categoria) {
-        const user = auth.getCurrentUser();
-        if (!user) return [];
-        return this.videos.filter(v => 
-            v.autorEmail === user.email && v.categoria === categoria
-        );
-    }
-    
-    getTotalViews() {
-        const user = auth.getCurrentUser();
-        if (!user) return 0;
-        return this.videos
-            .filter(v => v.autorEmail === user.email)
-            .reduce((total, v) => total + v.views, 0);
-    }
-}
+        this.comments = c;
+    },
 
-// APLICAÇÃO PRINCIPAL
-class MeuTubeApp {
-    constructor() {
-        this.db = new MeuTubeDB();
-        this.videoAtual = null;
-        this.youtubePlayer = null;
-        this.init();
+    getComments(vidId) { return this.comments[vidId] || []; },
+
+    toggleLike(id) {
+        const l = this.likes;
+        if (!l[id]) l[id] = 0;
+        l[id]++;
+        this.likes = l;
+        return l[id];
+    },
+
+    getLikes(id) { return this.likes[id] || 0; },
+
+    buscar(termo) {
+        const u = getUser();
+        if (!u) return [];
+        termo = termo.toLowerCase();
+        return this.videos.filter(v =>
+            v.autorEmail === u.email &&
+            (v.titulo.toLowerCase().includes(termo) ||
+             v.descricao.toLowerCase().includes(termo))
+        );
+    },
+
+    porCategoria(cat) {
+        const u = getUser();
+        if (!u) return [];
+        return this.videos.filter(v => v.autorEmail === u.email && v.categoria === cat);
+    },
+
+    totalViews() {
+        const u = getUser();
+        if (!u) return 0;
+        return this.videos
+            .filter(v => v.autorEmail === u.email)
+            .reduce((t, v) => t + v.views, 0);
     }
+};
+
+// ===== APLICAÇÃO =====
+let videoAtual = null;
+let ytPlayer = null;
+
+function init() {
+    initAuth();
     
-    init() {
-        this.setupForms();
-        this.checkAuth();
+    // Verifica login
+    if (getUser()) {
+        mostrarApp();
+    } else {
+        document.getElementById('tela-login').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
     }
-    
-    setupForms() {
-        // Login
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-            this.login(email, senha);
-        });
+
+    // Form login
+    document.getElementById('form-login').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const senha = document.getElementById('login-senha').value;
+        const r = login(email, senha);
+        if (r.ok) {
+            mostrarApp();
+        } else {
+            document.getElementById('msg-login-erro').textContent = r.msg;
+        }
+    });
+
+    // Form cadastro
+    document.getElementById('form-cadastro').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nome = document.getElementById('cad-nome').value;
+        const email = document.getElementById('cad-email').value;
+        const senha = document.getElementById('cad-senha').value;
+        const confirm = document.getElementById('cad-confirm').value;
         
-        // Cadastro
-        document.getElementById('register-form').addEventListener('submit', (e) => {
+        if (senha !== confirm) {
+            document.getElementById('msg-cad-erro').textContent = 'Senhas não coincidem!';
+            return;
+        }
+        
+        const r = cadastrar(nome, email, senha);
+        document.getElementById('msg-cad-erro').textContent = r.msg;
+        if (r.ok) {
+            setTimeout(() => mostrarTab('entrar'), 1500);
+        }
+    });
+
+    // Form vídeo
+    document.getElementById('form-video').addEventListener('submit', (e) => {
+        e.preventDefault();
+        salvarVideo();
+    });
+
+    // Form canal
+    document.getElementById('form-canal').addEventListener('submit', (e) => {
+        e.preventDefault();
+        salvarCanal();
+    });
+
+    // URL YouTube auto thumbnail
+    document.getElementById('inp-url').addEventListener('blur', (e) => {
+        const url = e.target.value;
+        const id = extrairYT(url);
+        if (id && !document.getElementById('inp-thumb').value) {
+            document.getElementById('inp-thumb').value = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+        }
+    });
+
+    // Menu
+    document.querySelectorAll('.menu-nav a').forEach(a => {
+        a.addEventListener('click', (e) => {
             e.preventDefault();
-            const nome = document.getElementById('register-nome').value;
-            const email = document.getElementById('register-email').value;
-            const senha = document.getElementById('register-senha').value;
-            const confirm = document.getElementById('register-confirm').value;
-            
-            if (senha !== confirm) {
-                alert('As senhas não coincidem!');
+            if (a.id === 'btn-sair') {
+                if (confirm('Deseja sair?')) {
+                    logout();
+                    location.reload();
+                }
                 return;
             }
-            
-            const result = auth.register(nome, email, senha);
-            if (result.success) {
-                alert(result.message + ' Faça login!');
-                this.showTab('login');
-            } else {
-                alert(result.message);
-            }
+            document.querySelectorAll('.menu-nav a').forEach(x => x.classList.remove('ativo'));
+            a.classList.add('ativo');
+            navegar(a.dataset.pagina);
+            fecharMenu();
         });
-        
-        // Perfil
-        document.getElementById('form-perfil').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.salvarPerfil();
-        });
-        
-        // Vídeo
-        document.getElementById('form-video').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.salvarVideo();
-        });
-        
-        // URL YouTube - auto thumbnail
-        document.getElementById('video-url').addEventListener('blur', (e) => {
-            const url = e.target.value;
-            const videoId = this.extrairYoutubeId(url);
-            if (videoId && !document.getElementById('video-thumb').value) {
-                document.getElementById('video-thumb').value = 
-                    `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-            }
-        });
-        
-        // Sair
-        document.getElementById('btn-sair').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Deseja sair?')) {
-                auth.logout();
-                location.reload();
-            }
-        });
-    }
-    
-    checkAuth() {
-        if (auth.isAuthenticated()) {
-            this.showApp();
-        } else {
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('app-container').style.display = 'none';
-        }
-    }
-    
-    login(email, senha) {
-        const result = auth.login(email, senha);
-        if (result.success) {
-            this.showApp();
-            this.notificacao(`Bem-vindo, ${result.user.nome}!`);
-        } else {
-            alert(result.message);
-        }
-    }
-    
-    showApp() {
-        const user = auth.getCurrentUser();
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
-        document.getElementById('user-name').textContent = user.nome;
-        this.setupApp();
-    }
-    
-    setupApp() {
-        this.setupMenu();
-        this.carregarPerfil();
-        this.renderizarVideos();
-        if (this.db.getMeusVideos().length > 0) {
-            this.carregarVideo(this.db.getMeusVideos()[0].id);
-        }
-    }
-    
-    setupMenu() {
-        document.querySelectorAll('.menu a').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (link.id === 'btn-sair') return;
-                
-                document.querySelectorAll('.menu a').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
-                const page = link.dataset.page;
-                this.navegar(page);
-                this.closeMenu();
-            });
-        });
-    }
-    
-    toggleMenu() {
-        document.getElementById('menu').classList.toggle('active');
-    }
-    
-    closeMenu() {
-        document.getElementById('menu').classList.remove('active');
-    }
-    
-    navegar(page) {
-        document.getElementById('player-section').style.display = 'block';
-        document.getElementById('canal-profile').style.display = 'none';
-        
-        switch(page) {
-            case 'inicio':
-                this.renderizarVideos(this.db.getMeusVideos(), 'Meus Vídeos');
-                break;
-            case 'favoritos':
-                const meusVideos = this.db.getMeusVideos();
-                const favoritos = meusVideos.filter(v => this.db.isFavorito(v.id));
-                this.renderizarVideos(favoritos, 'Favoritos');
-                break;
-            case 'cursos':
-                this.renderizarVideos(this.db.getVideosPorCategoria('curso'), 'Cursos');
-                break;
-            case 'canal':
-                document.getElementById('player-section').style.display = 'none';
-                document.getElementById('canal-profile').style.display = 'block';
-                this.atualizarEstatisticas();
-                break;
-        }
-    }
-    
-    carregarPerfil() {
-        const user = auth.getCurrentUser();
-        document.getElementById('channel-name').textContent = user.nomeCanal || user.nome;
-        document.getElementById('channel-desc').textContent = user.descricaoCanal || 'Sem descrição';
-        
-        const coverImg = document.getElementById('cover-image');
-        if (user.capaCanal) {
-            coverImg.src = user.capaCanal;
-            coverImg.style.display = 'block';
-        } else {
-            coverImg.style.display = 'none';
-        }
-    }
-    
-    atualizarEstatisticas() {
-        const videos = this.db.getMeusVideos();
-        document.getElementById('total-videos').textContent = videos.length;
-        document.getElementById('total-views').textContent = this.db.getTotalViews();
-    }
-    
-    editarPerfil() {
-        const user = auth.getCurrentUser();
-        document.getElementById('perfil-nome').value = user.nomeCanal || '';
-        document.getElementById('perfil-desc').value = user.descricaoCanal || '';
-        document.getElementById('perfil-capa').value = user.capaCanal || '';
-        document.getElementById('modal-perfil').style.display = 'flex';
-    }
-    
-    salvarPerfil() {
-        const nomeCanal = document.getElementById('perfil-nome').value;
-        const descricaoCanal = document.getElementById('perfil-desc').value;
-        const capaCanal = document.getElementById('perfil-capa').value;
-        
-        auth.updateUser({ nomeCanal, descricaoCanal, capaCanal });
-        this.carregarPerfil();
-        this.fecharModalPerfil();
-        this.notificacao('Perfil atualizado!');
-    }
-    
-    editarCapa() {
-        const url = prompt('URL da nova capa:');
-        if (url) {
-            auth.updateUser({ capaCanal: url });
-            this.carregarPerfil();
-        }
-    }
-    
-    renderizarVideos(videos = null, titulo = 'Meus Vídeos') {
-        const lista = document.getElementById('lista-videos');
-        const videosParaMostrar = videos || this.db.getMeusVideos();
-        
-        document.querySelector('#relacionados h3').innerHTML = 
-            `<i class="fas fa-list"></i> ${titulo}`;
-        
-        lista.innerHTML = '';
-        
-        if (videosParaMostrar.length === 0) {
-            lista.innerHTML = '<p style="text-align:center; color:#aaa; padding:20px;">Nenhum vídeo</p>';
-            return;
-        }
-        
-        videosParaMostrar.forEach(video => {
-            const card = document.createElement('div');
-            card.className = 'video-card';
-            card.innerHTML = `
-                <button class="btn-edit-card" onclick="app.editarVideo(${video.id})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-delete-card" onclick="app.deletarVideo(${video.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
-                <img src="${video.thumb || 'https://via.placeholder.com/320x180'}" alt="${video.titulo}">
-                <div class="video-card-info">
-                    <div class="video-card-titulo">${video.titulo}</div>
-                    <div class="video-card-meta">
-                        <span><i class="fas fa-eye"></i> ${video.views}</span>
-                        <span><i class="fas fa-calendar"></i> ${video.data}</span>
-                    </div>
-                    <span class="video-card-categoria">${video.categoria}</span>
-                </div>
-            `;
-            card.onclick = () => this.carregarVideo(video.id);
-            lista.appendChild(card);
-        });
-    }
-    
-    extrairYoutubeId(url) {
-        if (!url) return null;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-    
-    carregarVideo(id) {
-        const video = this.db.getVideo(id);
-        if (!video) return;
-        
-        this.videoAtual = video;
-        this.db.incrementarViews(id);
-        
-        // Player YouTube ou MP4
-        const ytId = this.extrairYoutubeId(video.url);
-        const wrapper = document.getElementById('video-wrapper');
-        const nativePlayer = document.getElementById('native-player');
-        const playOverlay = document.getElementById('play-overlay');
-        
-        if (ytId) {
-            if (this.youtubePlayer) {
-                this.youtubePlayer.loadVideoById(ytId);
-            } else {
-                this.youtubePlayer = new YT.Player('youtube-player', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: ytId,
-                    playerVars: {
-                        'autoplay': 0,
-                        'controls': 1,
-                        'modestbranding': 1,
-                        'rel': 0
-                    },
-                    events: {
-                        'onStateChange': (e) => {
-                            playOverlay.style.display = e.data === 1 ? 'none' : 'block';
-                            playOverlay.innerHTML = e.data === 1 ? 
-                                '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
-                        }
-                    }
-                });
-            }
-            nativePlayer.style.display = 'none';
-            playOverlay.style.display = 'block';
-        } else {
-            nativePlayer.src = video.url;
-            nativePlayer.style.display = 'block';
-            document.getElementById('youtube-player').innerHTML = '';
-            playOverlay.style.display = 'none';
-        }
-        
-        // Info
-        document.getElementById('video-titulo').textContent = video.titulo;
-        document.getElementById('video-descricao').textContent = video.descricao;
-        document.getElementById('video-views').textContent = video.views;
-        document.getElementById('video-data').textContent = video.data.split('-').reverse().join('/');
-        document.getElementById('video-autor').textContent = video.autorNome;
-        document.getElementById('like-count').textContent = this.db.getLikes(id);
-        
-        // Botões
-        const btnFav = document.getElementById('btn-favorito');
-        if (this.db.isFavorito(id)) {
-            btnFav.classList.add('favorited');
-            btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
-        } else {
-            btnFav.classList.remove('favorited');
-            btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
-        }
-        
-        const user = auth.getCurrentUser();
-        const podeEditar = video.autorEmail === user.email;
-        document.getElementById('btn-editar').style.display = podeEditar ? 'inline-flex' : 'none';
-        document.getElementById('btn-excluir').style.display = podeEditar ? 'inline-flex' : 'none';
-        
-        this.carregarComentarios(id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    togglePlay() {
-        if (this.youtubePlayer) {
-            const state = this.youtubePlayer.getPlayerState();
-            if (state === 1) this.youtubePlayer.pauseVideo();
-            else this.youtubePlayer.playVideo();
-        }
-    }
-    
-    carregarComentarios(videoId) {
-        const lista = document.getElementById('lista-comentarios');
-        const comentarios = this.db.getComentarios(videoId);
-        
-        lista.innerHTML = '';
-        if (comentarios.length === 0) {
-            lista.innerHTML = '<p style="text-align:center; color:#aaa;">Seja o primeiro a comentar!</p>';
-            return;
-        }
-        
-        comentarios.forEach(c => {
-            const item = document.createElement('div');
-            item.className = 'comentario-item';
-            item.innerHTML = `
-                <div class="comentario-header">
-                    <span class="comentario-autor">${c.autor}</span>
-                    <span>${c.data}</span>
-                </div>
-                <div>${c.texto}</div>
-            `;
-            lista.appendChild(item);
-        });
-    }
-    
-    adicionarComentario() {
-        const input = document.getElementById('input-comentario');
-        if (!input.value.trim() || !this.videoAtual) return;
-        
-        this.db.adicionarComentario(this.videoAtual.id, input.value.trim());
-        input.value = '';
-        this.carregarComentarios(this.videoAtual.id);
-    }
-    
-    curtirVideo() {
-        if (!this.videoAtual) return;
-        document.getElementById('like-count').textContent = this.db.toggleLike(this.videoAtual.id);
-        document.getElementById('btn-like').classList.toggle('liked');
-    }
-    
-    favoritarVideo() {
-        if (!this.videoAtual) return;
-        const isFav = this.db.toggleFavorito(this.videoAtual.id);
-        const btn = document.getElementById('btn-favorito');
-        
-        if (isFav) {
-            btn.classList.add('favorited');
-            btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
-        } else {
-            btn.classList.remove('favorited');
-            btn.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
-        }
-    }
-    
-    compartilharVideo() {
-        if (!this.videoAtual) return;
-        navigator.clipboard.writeText(window.location.href);
-        this.notificacao('Link copiado!');
-    }
-    
-    abrirModalVideo() {
-        document.getElementById('form-video').reset();
-        document.getElementById('video-id-edit').value = '';
-        document.getElementById('modal-title').innerHTML = 
-            '<i class="fas fa-plus-circle"></i> Publicar Vídeo';
-        document.getElementById('modal-video').style.display = 'flex';
-    }
-    
-    salvarVideo() {
-        const idEdit = document.getElementById('video-id-edit').value;
-        const titulo = document.getElementById('video-titulo-input').value;
-        let url = document.getElementById('video-url').value;
-        let thumb = document.getElementById('video-thumb').value;
-        const descricao = document.getElementById('video-descricao-input').value;
-        const categoria = document.getElementById('video-categoria').value;
-        const arquivo = document.getElementById('video-arquivo').files[0];
-        
-        if (arquivo) {
-            url = URL.createObjectURL(arquivo);
-        } else if (!url) {
-            alert('Insira URL ou faça upload!');
-            return;
-        }
-        
-        if (!thumb) {
-            const videoId = this.extrairYoutubeId(url);
-            if (videoId) {
-                thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-            }
-        }
-        
-        const videoData = { titulo, url, thumb, descricao, categoria };
-        
-        if (idEdit) {
-            this.db.atualizarVideo(idEdit, videoData);
-            this.notificacao('Vídeo atualizado!');
-        } else {
-            this.db.adicionarVideo(videoData);
-            this.notificacao('Vídeo publicado!');
-        }
-        
-        this.fecharModal();
-        this.renderizarVideos();
-    }
-    
-    editarVideo(id) {
-        const video = this.db.getVideo(id);
-        if (!video) return;
-        
-        document.getElementById('video-id-edit').value = video.id;
-        document.getElementById('video-titulo-input').value = video.titulo;
-        document.getElementById('video-url').value = video.url;
-        document.getElementById('video-thumb').value = video.thumb;
-        document.getElementById('video-descricao-input').value = video.descricao;
-        document.getElementById('video-categoria').value = video.categoria;
-        document.getElementById('modal-title').innerHTML = 
-            '<i class="fas fa-edit"></i> Editar Vídeo';
-        document.getElementById('modal-video').style.display = 'flex';
-    }
-    
-    editarVideoAtual() {
-        if (this.videoAtual) this.editarVideo(this.videoAtual.id);
-    }
-    
-    deletarVideo(id) {
-        if (!confirm('Excluir este vídeo?')) return;
-        this.db.deletarVideo(id);
-        this.renderizarVideos();
-        this.notificacao('Vídeo excluído!');
-    }
-    
-    excluirVideoAtual() {
-        if (this.videoAtual) this.deletarVideo(this.videoAtual.id);
-    }
-    
-    pesquisar() {
-        const termo = document.getElementById('search-input').value.trim();
-        if (!termo) {
-            this.renderizarVideos();
-            return;
-        }
-        this.renderizarVideos(this.db.buscarVideos(termo), `Resultados: "${termo}"`);
-    }
-    
-    mostrarDoacao() {
-        alert('Em breve: PIX e PayPal para doações!');
-    }
-    
-    showTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-        
-        if (tab === 'login') {
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            document.getElementById('login-form').classList.add('active');
-        } else {
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            document.getElementById('register-form').classList.add('active');
-        }
-    }
-    
-    togglePassword(id) {
-        const input = document.getElementById(id);
-        input.type = input.type === 'password' ? 'text' : 'password';
-    }
-    
-    fecharModal() {
-        document.getElementById('modal-video').style.display = 'none';
-    }
-    
-    fecharModalPerfil() {
-        document.getElementById('modal-perfil').style.display = 'none';
-    }
-    
-    notificacao(msg) {
-        const div = document.createElement('div');
-        div.style.cssText = `position:fixed;top:20px;right:20px;background:#ff0000;color:white;padding:15px 25px;border-radius:10px;z-index:9999;animation:slideIn 0.3s ease;`;
-        div.textContent = msg;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 3000);
+    });
+}
+
+function mostrarTab(t) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (t === 'entrar') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('form-login').style.display = 'block';
+        document.getElementById('form-cadastro').style.display = 'none';
+    } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('form-login').style.display = 'none';
+        document.getElementById('form-cadastro').style.display = 'block';
     }
 }
 
-// YouTube API
-function onYouTubeIframeAPIReady() {}
+function mostrarApp() {
+    const u = getUser();
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('nome-user').textContent = u.nome;
+    carregarCanal();
+    renderizarVideos();
+    const meus = DB.meusVideos();
+    if (meus.length > 0) carregarVideo(meus[0].id);
+}
 
-// Inicializar
-let app;
-document.addEventListener('DOMContentLoaded', () => {
-    app = new MeuTubeApp();
-});
+function toggleMenu() {
+    document.getElementById('menu-nav').classList.toggle('aberto');
+}
+
+function fecharMenu() {
+    document.getElementById('menu-nav').classList.remove('aberto');
+}
+
+function navegar(pagina) {
+    document.getElementById('player-area').style.display = 'block';
+    document.getElementById('perfil-canal').style.display = 'none';
+
+    switch(pagina) {
+        case 'inicio':
+            renderizarVideos(DB.meusVideos(), 'Meus Vídeos');
+            break;
+        case 'favoritos':
+            const meus = DB.meusVideos();
+            const favs = meus.filter(v => DB.isFav(v.id));
+            renderizarVideos(favs, 'Favoritos');
+            break;
+        case 'cursos':
+            renderizarVideos(DB.porCategoria('curso'), 'Cursos');
+            break;
+        case 'canal':
+            document.getElementById('player-area').style.display = 'none';
+            document.getElementById('perfil-canal').style.display = 'block';
+            atualizarStats();
+            break;
+    }
+}
+
+function carregarCanal() {
+    const u = getUser();
+    document.getElementById('nome-canal').textContent = u.nomeCanal || u.nome;
+    document.getElementById('desc-canal').textContent = u.descCanal || 'Sem descrição';
+    const img = document.getElementById('img-capa');
+    if (u.capaCanal) {
+        img.src = u.capaCanal;
+        img.style.display = 'block';
+    } else {
+        img.style.display = 'none';
+    }
+}
+
+function atualizarStats() {
+    document.getElementById('stat-videos').textContent = DB.meusVideos().length;
+    document.getElementById('stat-views').textContent = DB.totalViews();
+}
+
+function editarCanal() {
+    const u = getUser();
+    document.getElementById('canal-nome').value = u.nomeCanal || '';
+    document.getElementById('canal-desc').value = u.descCanal || '';
+    document.getElementById('canal-capa').value = u.capaCanal || '';
+    document.getElementById('modal-canal').style.display = 'flex';
+}
+
+function salvarCanal() {
+    updateUser({
+        nomeCanal: document.getElementById('canal-nome').value,
+        descCanal: document.getElementById('canal-desc').value,
+        capaCanal: document.getElementById('canal-capa').value
+    });
+    carregarCanal();
+    fecharModalCanal();
+    alert('Canal atualizado!');
+}
+
+function alterarCapa() {
+    const url = prompt('URL da nova capa:');
+    if (url) {
+        updateUser({ capaCanal: url });
+        carregarCanal();
+    }
+}
+
+function extrairYT(url) {
+    if (!url) return null;
+    const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+    return (m && m[2].length === 11) ? m[2] : null;
+}
+
+function renderizarVideos(lista, titulo) {
+    const grid = document.getElementById('grid-videos');
+    document.getElementById('titulo-lista').innerHTML = `<i class="fas fa-list"></i> ${titulo || 'Meus Vídeos'}`;
+    grid.innerHTML = '';
+
+    const videos = lista || DB.meusVideos();
+    if (videos.length === 0) {
+        grid.innerHTML = '<p style="text-align:center;color:#aaa;padding:20px;">Nenhum vídeo ainda. Clique no + para publicar!</p>';
+        return;
+    }
+
+    videos.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.innerHTML = `
+            <button class="btn-edit-card" onclick="event.stopPropagation();editarVideo(${v.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn-del-card" onclick="event.stopPropagation();deletarVideo(${v.id})"><i class="fas fa-trash"></i></button>
+            <img src="${v.thumb || 'https://via.placeholder.com/320x180'}" alt="${v.titulo}">
+            <div class="card-info">
+                <div class="card-titulo">${v.titulo}</div>
+                <div class="card-meta"><i class="fas fa-eye"></i> ${v.views} • ${v.data}</div>
+                <span class="card-cat">${v.categoria}</span>
+            </div>
+        `;
+        card.onclick = () => carregarVideo(v.id);
+        grid.appendChild(card);
+    });
+}
+
+function carregarVideo(id) {
+    const v = DB.getVideo(id);
+    if (!v) return;
+    videoAtual = v;
+    DB.addView(id);
+
+    const ytId = extrairYT(v.url);
+    const ytDiv = document.getElementById('player-yt');
+    const mp4 = document.getElementById('player-mp4');
+
+    if (ytId) {
+        mp4.style.display = 'none';
+        ytDiv.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&modestbranding=1&rel=0" allowfullscreen allow="autoplay"></iframe>`;
+    } else {
+        ytDiv.innerHTML = '';
+        mp4.src = v.url;
+        mp4.style.display = 'block';
+        mp4.play();
+    }
+
+    document.getElementById('v-titulo').textContent = v.titulo;
+    document.getElementById('v-desc').textContent = v.descricao;
+    document.getElementById('v-views').textContent = v.views;
+    document.getElementById('v-data').textContent = v.data.split('-').reverse().join('/');
+    document.getElementById('v-autor').textContent = v.autorNome;
+    document.getElementById('qtd-like').textContent = DB.getLikes(id);
+
+    const btnFav = document.getElementById('btn-fav');
+    if (DB.isFav(id)) {
+        btnFav.classList.add('favorited');
+        btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
+    } else {
+        btnFav.classList.remove('favorited');
+        btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
+    }
+
+    const u = getUser();
+    const pode = v.autorEmail === u.email;
+    document.getElementById('btn-edit').style.display = pode ? 'inline-flex' : 'none';
+    document.getElementById('btn-del').style.display = pode ? 'inline-flex' : 'none';
+
+    carregarComentarios(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function carregarComentarios(vidId) {
+    const lista = document.getElementById('lista-comentarios');
+    const coms = DB.getComments(vidId);
+    lista.innerHTML = '';
+    if (coms.length === 0) {
+        lista.innerHTML = '<p style="text-align:center;color:#aaa;">Seja o primeiro a comentar!</p>';
+        return;
+    }
+    coms.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'coment-item';
+        d.innerHTML = `
+            <div class="coment-header">
+                <span class="coment-autor">${c.autor}</span>
+                <span>${c.data}</span>
+            </div>
+            <div>${c.texto}</div>
+        `;
+        lista.appendChild(d);
+    });
+}
+
+function comentar() {
+    const txt = document.getElementById('txt-comentario').value.trim();
+    if (!txt || !videoAtual) return;
+    DB.addComment(videoAtual.id, txt);
+    document.getElementById('txt-comentario').value = '';
+    carregarComentarios(videoAtual.id);
+}
+
+function curtir() {
+    if (!videoAtual) return;
+    document.getElementById('qtd-like').textContent = DB.toggleLike(videoAtual.id);
+    document.getElementById('btn-like').classList.toggle('favorited');
+}
+
+function favoritar() {
+    if (!videoAtual) return;
+    const f = DB.toggleFav(videoAtual.id);
+    const btn = document.getElementById('btn-fav');
+    if (f) {
+        btn.classList.add('favorited');
+        btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
+    } else {
+        btn.classList.remove('favorited');
+        btn.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
+    }
+}
+
+function compartilhar() {
+    if (!videoAtual) return;
+    navigator.clipboard.writeText(window.location.href);
+    alert('Link copiado!');
+}
+
+function abrirModalVideo() {
+    document.getElementById('form-video').reset();
+    document.getElementById('edit-id').value = '';
+    document.getElementById('titulo-modal').innerHTML = '<i class="fas fa-plus-circle"></i> Publicar Vídeo';
+    document.getElementById('modal-video').style.display = 'flex';
+}
+
+function salvarVideo() {
+    const editId = document.getElementById('edit-id').value;
+    const titulo = document.getElementById('inp-titulo').value;
+    let url = document.getElementById('inp-url').value;
+    let thumb = document.getElementById('inp-thumb').value;
+    const descricao = document.getElementById('inp-desc').value;
+    const categoria = document.getElementById('inp-cat').value;
+    const arquivo = document.getElementById('inp-arquivo').files[0];
+
+    if (arquivo) {
+        url = URL.createObjectURL(arquivo);
+    } else if (!url) {
+        alert('Insira URL ou faça upload!');
+        return;
+    }
+
+    if (!thumb) {
+        const id = extrairYT(url);
+        if (id) thumb = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+    }
+
+    const data = { titulo, url, thumb, descricao, categoria };
+
+    if (editId) {
+        DB.updateVideo(editId, data);
+        alert('Vídeo atualizado!');
+    } else {
+        DB.addVideo(data);
+        alert('Vídeo publicado!');
+    }
+
+    fecharModal();
+    renderizarVideos();
+}
+
+function editarVideo(id) {
+    const v = DB.getVideo(id);
+    if (!v) return;
+    document.getElementById('edit-id').value = v.id;
+    document.getElementById('inp-titulo').value = v.titulo;
+    document.getElementById('inp-url').value = v.url;
+    document.getElementById('inp-thumb').value = v.thumb || '';
+    document.getElementById('inp-desc').value = v.descricao;
+    document.getElementById('inp-cat').value = v.categoria;
+   
