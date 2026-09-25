@@ -3,13 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeuTube - CFO da Alma e dos Negócios</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO BÁSICO -->
+    <title>MeuTube | CFO da Alma e dos Negócios - Prof. Luciano Francisco</title>
+    <meta name="description" content="Plataforma inovadora de vídeos, cursos e tutoriais do Prof. Luciano Francisco. Transforme sua mente e seus negócios com o método CFO da Alma e dos Negócios. Acesso gratuito e conteúdo de alta qualidade.">
+    <meta name="keywords" content="CFO da Alma, Luciano Francisco, cursos online, vídeos motivacionais, educação financeira, empreendedorismo, meutube, inovação">
+    <meta name="author" content="Prof. Luciano Francisco">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link rel="canonical" href="https://lucianofs.github.io/meutube/">
+    
+    <!-- OPEN GRAPH (WHATSAPP / FACEBOOK) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lucianofs.github.io/meutube/">
+    <meta property="og:title" content="MeuTube | CFO da Alma e dos Negócios">
+    <meta property="og:description" content="Acesse cursos, tutoriais e conteúdos exclusivos do Prof. Luciano Francisco. Inovação e conhecimento para transformar sua vida e seus negócios.">
+    <meta property="og:image" content="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"> <!-- Substitua por uma URL da sua logo oficial quando tiver -->
+    <meta property="og:site_name" content="MeuTube - Prof. Luciano Francisco">
+    <meta property="og:locale" content="pt_BR">
+
+    <!-- TWITTER CARDS -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MeuTube | CFO da Alma e dos Negócios">
+    <meta name="twitter:description" content="Plataforma inovadora de vídeos e cursos do Prof. Luciano Francisco.">
+    <meta name="twitter:image" content="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
+
+    <!-- JSON-LD SCHEMA.ORG (SEO AVANÇADO PARA GOOGLE) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MeuTube - CFO da Alma e dos Negócios",
+      "url": "https://lucianofs.github.io/meutube/",
+      "author": {
+        "@type": "Person",
+        "name": "Prof. Luciano Francisco"
+      },
+      "description": "Plataforma de vídeos educacionais, cursos e desenvolvimento pessoal e profissional."
+    }
+    </script>
+
     <link rel="stylesheet" href="meutube.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- API DO YOUTUBE PARA CONTROLE TOTAL (SEM REDIRECIONAMENTO) -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
     <div id="pagina">
-        <!-- TOPO / HEADER -->
         <header id="topo">
             <div id="logo">
                 <i class="fab fa-youtube" style="color: #ff0000; font-size: 40px;"></i>
@@ -17,7 +58,7 @@
             </div>
             
             <div id="search-box">
-                <input type="text" id="search-input" placeholder="Pesquisar vídeos...">
+                <input type="text" id="search-input" placeholder="Pesquisar cursos e vídeos...">
                 <button id="search-btn"><i class="fas fa-search"></i></button>
             </div>
             
@@ -31,22 +72,25 @@
             </nav>
         </header>
 
-        <!-- ÁREA PRINCIPAL -->
         <main id="conteudo-principal">
-            <!-- PLAYER PRINCIPAL -->
             <section id="player">
                 <div id="video-container">
-                    <!-- O JS vai injetar aqui ou <video> ou <iframe> -->
-                    <div id="media-wrapper"></div>
+                    <div id="media-wrapper">
+                        <div id="youtube-player"></div>
+                        <video id="native-player" style="display:none;" controls playsinline></video>
+                    </div>
+                    <!-- MÁSCARA PARA IMPEDIR CLIQUES NO YOUTUBE -->
+                    <div id="youtube-mask"></div>
+                    <button id="custom-play-btn" style="display:none;"><i class="fas fa-play"></i></button>
                 </div>
                 
                 <div id="video-info">
-                    <h2 id="video-titulo">Bem-vindo ao MeuTube</h2>
+                    <h1 id="video-titulo">Bem-vindo ao MeuTube</h1>
                     <div id="video-stats">
                         <span id="video-views"><i class="fas fa-eye"></i> 0 visualizações</span>
                         <span id="video-data"><i class="fas fa-calendar"></i> --/--/----</span>
                     </div>
-                    <p id="video-descricao">Selecione um vídeo para assistir</p>
+                    <article id="video-descricao">Selecione um vídeo para assistir. Conteúdo exclusivo CFO da Alma e dos Negócios.</article>
                     
                     <div id="video-actions">
                         <button id="btn-like" title="Curtir"><i class="fas fa-thumbs-up"></i> <span id="like-count">0</span></button>
@@ -56,69 +100,64 @@
                     </div>
                 </div>
 
-                <!-- COMENTÁRIOS -->
                 <div id="comentarios">
-                    <h3><i class="fas fa-comments"></i> Comentários</h3>
+                    <h3><i class="fas fa-comments"></i> Comentários da Comunidade</h3>
                     <div id="form-comentario">
-                        <textarea id="input-comentario" placeholder="Escreva seu comentário..." rows="3"></textarea>
+                        <textarea id="input-comentario" placeholder="Deixe seu comentário ou dúvida..." rows="3"></textarea>
                         <button id="btn-comentar"><i class="fas fa-paper-plane"></i> Comentar</button>
                     </div>
                     <div id="lista-comentarios"></div>
                 </div>
             </section>
 
-            <!-- VÍDEOS RELACIONADOS -->
             <aside id="relacionados">
                 <h3 id="titulo-relacionados"><i class="fas fa-list"></i> Próximos Vídeos</h3>
                 <ul id="lista-videos"></ul>
             </aside>
         </main>
 
-        <!-- FOOTER -->
         <footer id="footer">
             <p>© 2026 <span>MeuTube</span> - CFO da Alma e dos Negócios | Prof. Luciano Francisco</p>
+            <p>Desenvolvido com inovação para transformar vidas. Todos os direitos reservados.</p>
         </footer>
     </div>
 
-    <!-- MODAL PARA ADICIONAR VÍDEO -->
+    <!-- MODAL -->
     <div id="modal-adicionar" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2><i class="fas fa-plus-circle"></i> Adicionar Novo Vídeo</h2>
+            <h2><i class="fas fa-plus-circle"></i> Adicionar Novo Conteúdo</h2>
             <form id="form-novo-video">
                 <label>Título do Vídeo:</label>
-                <input type="text" id="novo-titulo" required placeholder="Digite o título">
+                <input type="text" id="novo-titulo" required placeholder="Ex: Aula 01 - Mentalidade">
                 
-                <label>Opção 1: URL do YouTube ou MP4:</label>
-                <input type="url" id="novo-url" placeholder="https://youtu.be/... ou https://...mp4">
+                <label>URL do Vídeo (YouTube ou MP4 direto):</label>
+                <input type="url" id="novo-url" placeholder="https://youtu.be/... ou link MP4">
                 
-                <label>Opção 2: Fazer Upload do Arquivo (MP4):</label>
+                <label>Ou faça Upload (Temporário - Sessão Atual):</label>
                 <input type="file" id="novo-arquivo" accept="video/mp4,video/x-m4v,video/*">
-                <small style="color: #aaa; font-size: 12px;">*Uploads ficam salvos apenas nesta sessão do navegador.</small>
+                <small style="color: #ffaa00; font-size: 12px;">⚠️ Uploads locais somem ao fechar o navegador. Para permanente, use URLs de nuvem (Drive, Dropbox, etc).</small>
                 
                 <label>Thumbnail (URL da imagem):</label>
-                <input type="url" id="novo-thumb" placeholder="https://... (deixe em branco para padrão)">
+                <input type="url" id="novo-thumb" placeholder="https://...">
                 
                 <label>Descrição:</label>
-                <textarea id="novo-descricao" rows="3" placeholder="Descreva o vídeo..."></textarea>
+                <textarea id="novo-descricao" rows="3" placeholder="Descreva o que o aluno vai aprender..."></textarea>
                 
                 <label>Categoria:</label>
                 <select id="novo-categoria">
-                    <option value="geral">Geral</option>
                     <option value="curso">Curso</option>
                     <option value="tutorial">Tutorial</option>
                     <option value="motivacional">Motivacional</option>
+                    <option value="geral">Geral</option>
                 </select>
                 
-                <button type="submit"><i class="fas fa-save"></i> Salvar Vídeo</button>
+                <button type="submit"><i class="fas fa-save"></i> Salvar no MeuTube</button>
             </form>
         </div>
     </div>
 
-    <!-- BOTÃO FLUTUANTE -->
-    <button id="fab-adicionar" title="Adicionar Vídeo">
-        <i class="fas fa-plus"></i>
-    </button>
+    <button id="fab-adicionar" title="Adicionar Vídeo"><i class="fas fa-plus"></i></button>
 
     <script src="meutube.js"></script>
 </body>
