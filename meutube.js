@@ -1,10 +1,16 @@
+// SISTEMA DE AUTENTICAÇÃO
+const USUARIO_CADASTRADO = {
+    email: 'professorluciano1@gmail.com',
+    senha: 'Deuseamor1@',
+    nome: 'CFO da Alma e dos Negócios',
+    titulo: 'Prof. Luciano Francisco',
+    descricao: 'Consultoria em análise de dados de marketing e levantamento empresarial'
+};
+
+let usuarioLogado = null;
 let youtubePlayerInstance = null;
 
-// Função chamada automaticamente pela API do YouTube
-function onYouTubeIframeAPIReady() {
-    // Inicialização será feita dinamicamente pelo app
-}
-
+// BANCO DE DADOS
 class MeuTubeDB {
     constructor() {
         this.videos = JSON.parse(localStorage.getItem('meutube_videos')) || [];
@@ -15,16 +21,16 @@ class MeuTubeDB {
         if (this.videos.length === 0) {
             this.videos = [
                 {
-                    id: 1, titulo: "Bem-vindo ao MeuTube - CFO da Alma",
-                    url: "https://www.w3schools.com/html/mov_bbb.mp4",
-                    thumb: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-                    descricao: "Vídeo de exemplo MP4 funcional. Conteúdo exclusivo.", categoria: "motivacional", views: 1250, data: "2026-09-25"
-                },
-                {
-                    id: 2, titulo: "Mentalidade de Sucesso - Aula 01",
+                    id: 1,
+                    titulo: "Bem-vindo ao MeuTube - CFO da Alma",
                     url: "https://youtu.be/kiIIgYDCPk4",
                     thumb: "https://img.youtube.com/vi/kiIIgYDCPk4/maxresdefault.jpg",
-                    descricao: "Aprenda a transformar sua mente e seus negócios com técnicas comprovadas.", categoria: "curso", views: 890, data: "2026-09-20"
+                    descricao: "Vídeo de boas-vindas à plataforma",
+                    categoria: "motivacional",
+                    views: 1250,
+                    data: "2026-09-25",
+                    autor: "CFO da Alma e dos Negócios",
+                    autorEmail: "professorluciano1@gmail.com"
                 }
             ];
             this.salvar();
@@ -42,14 +48,26 @@ class MeuTubeDB {
         video.id = Date.now();
         video.views = 0;
         video.data = new Date().toISOString().split('T')[0];
+        video.autor = usuarioLogado ? usuarioLogado.nome : 'Visitante';
+        video.autorEmail = usuarioLogado ? usuarioLogado.email : 'anonimo';
         this.videos.push(video);
         this.salvar();
         return video;
     }
     
+    atualizarVideo(id, dadosAtualizados) {
+        const index = this.videos.findIndex(v => v.id === parseInt(id));
+        if (index !== -1) {
+            this.videos[index] = { ...this.videos[index], ...dadosAtualizados };
+            this.salvar();
+            return this.videos[index];
+        }
+        return null;
+    }
+    
     deletarVideo(id) {
         this.videos = this.videos.filter(v => v.id !== id);
-        this.favoritos = this.favoritos.filter(favId => favId !== id);
+        this.favoritos = this.favoritos.filter(f => f !== id);
         delete this.comentarios[id];
         delete this.likes[id];
         this.salvar();
@@ -57,40 +75,102 @@ class MeuTubeDB {
     
     getVideo(id) { return this.videos.find(v => v.id === parseInt(id)); }
     incrementarViews(id) { const v = this.getVideo(id); if (v) { v.views++; this.salvar(); } }
+    
     toggleFavorito(id) {
         const idx = this.favoritos.indexOf(id);
-        if (idx > -1) this.favoritos.splice(idx, 1); else this.favoritos.push(id);
-        this.salvar(); return this.favoritos.includes(id);
+        if (idx > -1) this.favoritos.splice(idx, 1);
+        else this.favoritos.push(id);
+        this.salvar();
+        return this.favoritos.includes(id);
     }
+    
     isFavorito(id) { return this.favoritos.includes(id); }
-    adicionarComentario(videoId, texto) {
+    
+    adicionarComentario(videoId, texto, autor) {
         if (!this.comentarios[videoId]) this.comentarios[videoId] = [];
-        this.comentarios[videoId].unshift({ id: Date.now(), autor: "Visitante", texto, data: new Date().toLocaleString('pt-BR') });
+        this.comentarios[videoId].unshift({
+            id: Date.now(),
+            autor: autor || (usuarioLogado ? usuarioLogado.nome : 'Visitante'),
+            texto,
+            data: new Date().toLocaleString('pt-BR')
+        });
         this.salvar();
     }
+    
     removerComentario(videoId, comentarioId) {
         if (this.comentarios[videoId]) {
             this.comentarios[videoId] = this.comentarios[videoId].filter(c => c.id !== comentarioId);
             this.salvar();
         }
     }
+    
     getComentarios(videoId) { return this.comentarios[videoId] || []; }
+    
     toggleLike(videoId) {
         if (!this.likes[videoId]) this.likes[videoId] = 0;
-        this.likes[videoId]++; this.salvar(); return this.likes[videoId];
+        this.likes[videoId]++;
+        this.salvar();
+        return this.likes[videoId];
     }
+    
     getLikes(videoId) { return this.likes[videoId] || 0; }
+    
     buscarVideos(termo) {
         termo = termo.toLowerCase();
-        return this.videos.filter(v => v.titulo.toLowerCase().includes(termo) || v.categoria.toLowerCase().includes(termo));
+        return this.videos.filter(v => 
+            v.titulo.toLowerCase().includes(termo) || 
+            v.descricao.toLowerCase().includes(termo) ||
+            v.categoria.toLowerCase().includes(termo)
+        );
     }
 }
 
+// SISTEMA PRINCIPAL
 class MeuTubeApp {
     constructor() {
         this.db = new MeuTubeDB();
         this.videoAtual = null;
+        this.verificarLogin();
+    }
+    
+    verificarLogin() {
+        const salvo = localStorage.getItem('meutube_usuario_logado');
+        if (salvo) {
+            usuarioLogado = JSON.parse(salvo);
+            this.mostrarApp();
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+        }
+    }
+    
+    fazerLogin(email, senha) {
+        if (email === USUARIO_CADASTRADO.email && senha === USUARIO_CADASTRADO.senha) {
+            usuarioLogado = {
+                email: USUARIO_CADASTRADO.email,
+                nome: USUARIO_CADASTRADO.nome,
+                titulo: USUARIO_CADASTRADO.titulo
+            };
+            localStorage.setItem('meutube_usuario_logado', JSON.stringify(usuarioLogado));
+            this.mostrarApp();
+            this.mostrarNotificacao('Login realizado com sucesso! Bem-vindo, ' + usuarioLogado.nome);
+            return true;
+        }
+        alert('Email ou senha incorretos!');
+        return false;
+    }
+    
+    mostrarApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+        document.getElementById('user-name').textContent = usuarioLogado.titulo;
         this.inicializar();
+    }
+    
+    fazerLogout() {
+        localStorage.removeItem('meutube_usuario_logado');
+        usuarioLogado = null;
+        location.reload();
     }
     
     inicializar() {
@@ -100,65 +180,155 @@ class MeuTubeApp {
     }
     
     carregarEventos() {
+        // Login
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            this.fazerLogin(email, senha);
+        });
+        
+        // Menu
         document.querySelectorAll('#menu a').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
+                if (link.id === 'btn-sair') {
+                    this.fazerLogout();
+                    return;
+                }
                 document.querySelectorAll('#menu a').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
                 this.navegarPara(link.dataset.page);
             });
         });
         
-        document.getElementById('fab-adicionar').addEventListener('click', () => document.getElementById('modal-adicionar').style.display = 'flex');
-        document.querySelector('.close-modal').addEventListener('click', () => document.getElementById('modal-adicionar').style.display = 'none');
-        window.addEventListener('click', (e) => { if (e.target === document.getElementById('modal-adicionar')) document.getElementById('modal-adicionar').style.display = 'none'; });
+        // Modal
+        document.getElementById('fab-adicionar').addEventListener('click', () => {
+            document.getElementById('modal-title').innerHTML = '<i class="fas fa-plus-circle"></i> Adicionar Vídeo';
+            document.getElementById('form-video').reset();
+            document.getElementById('video-id-edit').value = '';
+            document.getElementById('modal-video').style.display = 'flex';
+        });
         
-        document.getElementById('form-novo-video').addEventListener('submit', (e) => { e.preventDefault(); this.adicionarNovoVideo(); });
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            this.closest('.modal').style.display = 'none';
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+        });
+        
+        // Formulário Vídeo
+        document.getElementById('form-video').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarVideo();
+        });
+        
+        // URL do YouTube - Extrair Thumbnail Automaticamente
+        document.getElementById('video-url').addEventListener('blur', (e) => {
+            const url = e.target.value;
+            const videoId = this.extrairYoutubeId(url);
+            if (videoId && !document.getElementById('video-thumb').value) {
+                // Auto-preencher thumbnail do YouTube
+                document.getElementById('video-thumb').value = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                this.mostrarNotificacao('✓ Thumbnail do YouTube extraída automaticamente!');
+            }
+        });
+        
+        // Botões
         document.getElementById('btn-comentar').addEventListener('click', () => this.adicionarComentario());
         document.getElementById('btn-like').addEventListener('click', () => this.curtirVideo());
         document.getElementById('btn-favoritar').addEventListener('click', () => this.favoritarVideo());
         document.getElementById('btn-compartilhar').addEventListener('click', () => this.compartilharVideo());
+        document.getElementById('btn-editar-video').addEventListener('click', () => this.editarVideoAtual());
         document.getElementById('btn-deletar-video').addEventListener('click', () => this.deletarVideoAtual());
+        document.getElementById('btn-doar').addEventListener('click', () => {
+            document.getElementById('modal-doacao').style.display = 'flex';
+        });
         
+        // Pesquisa
         document.getElementById('search-btn').addEventListener('click', () => this.pesquisar());
-        document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') this.pesquisar(); });
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.pesquisar();
+        });
+    }
+    
+    extrairYoutubeId(url) {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+    
+    salvarVideo() {
+        const idEdit = document.getElementById('video-id-edit').value;
+        const titulo = document.getElementById('video-titulo-input').value;
+        let url = document.getElementById('video-url').value;
+        let thumb = document.getElementById('video-thumb').value;
+        const descricao = document.getElementById('video-descricao-input').value;
+        const categoria = document.getElementById('video-categoria').value;
+        const arquivo = document.getElementById('video-arquivo').files[0];
         
-        document.getElementById('btn-sair').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Deseja realmente sair? Isso limpará os dados locais desta sessão.')) {
-                localStorage.clear();
-                this.mostrarNotificacao('Sessão encerrada com sucesso. Até breve!');
-                setTimeout(() => location.reload(), 1500);
+        // Se for upload local
+        if (arquivo) {
+            url = URL.createObjectURL(arquivo);
+            if (!thumb) thumb = 'https://lucianofs.github.io/meutube/assets/logo-share.jpg';
+        } else if (!url) {
+            alert('Por favor, insira uma URL ou faça upload de um vídeo.');
+            return;
+        }
+        
+        // Se for YouTube e não tem thumbnail, extrair automaticamente
+        if (!thumb) {
+            const videoId = this.extrairYoutubeId(url);
+            if (videoId) {
+                thumb = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
             }
-        });
-
-        // Botão customizado de play para vídeos do YouTube (contorna a máscara)
-        document.getElementById('custom-play-btn').addEventListener('click', () => {
-            if (youtubePlayerInstance) {
-                const state = youtubePlayerInstance.getPlayerState();
-                if (state === 1) { // Playing
-                    youtubePlayerInstance.pauseVideo();
-                    document.getElementById('custom-play-btn').innerHTML = '<i class="fas fa-play"></i>';
-                } else {
-                    youtubePlayerInstance.playVideo();
-                    document.getElementById('custom-play-btn').innerHTML = '<i class="fas fa-pause"></i>';
-                }
-            }
-        });
+        }
+        
+        const videoData = { titulo, url, thumb, descricao, categoria };
+        
+        if (idEdit) {
+            // Editar vídeo existente
+            this.db.atualizarVideo(idEdit, videoData);
+            this.mostrarNotificacao('✓ Vídeo atualizado com sucesso!');
+        } else {
+            // Novo vídeo
+            this.db.adicionarVideo(videoData);
+            this.mostrarNotificacao('✓ Vídeo publicado com sucesso! SEO otimizado automaticamente.');
+        }
+        
+        document.getElementById('modal-video').style.display = 'none';
+        this.renderizarListaVideos();
+        if (!idEdit) this.carregarVideo(Date.now());
+    }
+    
+    editarVideoAtual() {
+        if (!this.videoAtual) return;
+        
+        document.getElementById('modal-title').innerHTML = '<i class="fas fa-edit"></i> Editar Vídeo';
+        document.getElementById('video-id-edit').value = this.videoAtual.id;
+        document.getElementById('video-titulo-input').value = this.videoAtual.titulo;
+        document.getElementById('video-url').value = this.videoAtual.url;
+        document.getElementById('video-thumb').value = this.videoAtual.thumb;
+        document.getElementById('video-descricao-input').value = this.videoAtual.descricao;
+        document.getElementById('video-categoria').value = this.videoAtual.categoria;
+        
+        document.getElementById('modal-video').style.display = 'flex';
     }
     
     navegarPara(pagina) {
         switch(pagina) {
             case 'inicio': this.renderizarListaVideos(this.db.videos, 'Próximos Vídeos'); break;
-            case 'favoritos': this.renderizarListaVideos(this.db.videos.filter(v => this.db.isFavorito(v.id)), 'Seus Favoritos'); break;
-            case 'cursos': this.renderizarListaVideos(this.db.videos.filter(v => v.categoria === 'curso'), 'Cursos Disponíveis'); break;
+            case 'favoritos': 
+                const favs = this.db.videos.filter(v => this.db.isFavorito(v.id));
+                this.renderizarListaVideos(favs, 'Seus Favoritos'); 
+                break;
+            case 'cursos': 
+                const cursos = this.db.videos.filter(v => v.categoria === 'curso');
+                this.renderizarListaVideos(cursos, 'Cursos Disponíveis'); 
+                break;
         }
-    }
-    
-    extrairYoutubeId(url) {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
     }
     
     renderizarMedia(video) {
@@ -171,8 +341,8 @@ class MeuTubeApp {
         if (ytId) {
             nativePlayer.style.display = 'none';
             ytWrapper.style.display = 'block';
-            mask.style.display = 'block'; // Ativa a máscara anti-clique
-            playBtn.style.display = 'flex'; // Mostra botão de play customizado
+            mask.style.display = 'block';
+            playBtn.style.display = 'flex';
 
             if (youtubePlayerInstance) {
                 youtubePlayerInstance.loadVideoById(ytId);
@@ -184,14 +354,10 @@ class MeuTubeApp {
                         'rel': 0, 'showinfo': 0, 'iv_load_policy': 3, 'disablekb': 1
                     },
                     events: {
-                        'onReady': (event) => { event.target.playVideo(); },
-                        'onStateChange': (event) => {
-                            if (event.data === YT.PlayerState.PLAYING) {
-                                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                                this.configurarMediaSession(video); // Ativa background play
-                            } else {
-                                playBtn.innerHTML = '<i class="fas fa-play"></i>';
-                            }
+                        'onReady': (e) => e.target.playVideo(),
+                        'onStateChange': (e) => {
+                            playBtn.innerHTML = e.data === 1 ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+                            if (e.data === 1) this.configurarMediaSession(video);
                         }
                     }
                 });
@@ -203,45 +369,46 @@ class MeuTubeApp {
             nativePlayer.style.display = 'block';
             nativePlayer.src = video.url;
             nativePlayer.play();
-            nativePlayer.onplay = () => this.configurarMediaSession(video);
         }
     }
     
-    // MEDIA SESSION API (Background Play / Notificações do Sistema)
     configurarMediaSession(video) {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: video.titulo,
-                artist: 'Prof. Luciano Francisco - MeuTube',
+                artist: usuarioLogado ? usuarioLogado.nome : 'MeuTube',
                 album: 'CFO da Alma e dos Negócios',
                 artwork: [{ src: video.thumb, sizes: '512x512', type: 'image/jpeg' }]
             });
-            navigator.mediaSession.setActionHandler('play', () => {
-                if (youtubePlayerInstance) youtubePlayerInstance.playVideo();
-                else document.getElementById('native-player').play();
-            });
-            navigator.mediaSession.setActionHandler('pause', () => {
-                if (youtubePlayerInstance) youtubePlayerInstance.pauseVideo();
-                else document.getElementById('native-player').pause();
-            });
         }
     }
-
+    
     renderizarListaVideos(videos = this.db.videos, titulo = 'Próximos Vídeos') {
         const lista = document.getElementById('lista-videos');
         document.getElementById('titulo-relacionados').innerHTML = `<i class="fas fa-list"></i> ${titulo}`;
         lista.innerHTML = '';
-        if (videos.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#aaa; padding:20px;">Nenhum vídeo encontrado</p>'; return; }
+        
+        if (videos.length === 0) {
+            lista.innerHTML = '<p style="text-align:center; color:#aaa; padding:20px;">Nenhum vídeo encontrado</p>';
+            return;
+        }
         
         videos.forEach(video => {
             const card = document.createElement('li');
             card.className = 'video-card';
+            
+            const podeEditar = usuarioLogado && video.autorEmail === usuarioLogado.email;
+            
             card.innerHTML = `
-                <button class="btn-delete-card" onclick="event.stopPropagation(); app.deletarVideo(${video.id})" title="Excluir"><i class="fas fa-trash"></i></button>
-                <img src="${video.thumb}" alt="${video.titulo}" onerror="this.src='https://via.placeholder.com/320x180/1a1a1a/ff0000?text=MeuTube'">
+                ${podeEditar ? `<button class="btn-edit-card" onclick="event.stopPropagation(); app.abrirEdicao(${video.id})" title="Editar"><i class="fas fa-edit"></i></button>` : ''}
+                ${podeEditar ? `<button class="btn-delete-card" onclick="event.stopPropagation(); app.deletarVideo(${video.id})" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
+                <img src="${video.thumb}" alt="${video.titulo}" onerror="this.src='https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg'">
                 <div class="video-card-info">
                     <div class="video-card-titulo">${video.titulo}</div>
-                    <div class="video-card-meta"><i class="fas fa-eye"></i> ${video.views} • ${video.data}</div>
+                    <div class="video-card-meta">
+                        <i class="fas fa-user"></i> ${video.autor} • 
+                        <i class="fas fa-eye"></i> ${video.views}
+                    </div>
                     <span class="video-card-categoria">${video.categoria}</span>
                 </div>
             `;
@@ -250,9 +417,17 @@ class MeuTubeApp {
         });
     }
     
+    abrirEdicao(id) {
+        const video = this.db.getVideo(id);
+        if (!video) return;
+        this.videoAtual = video;
+        this.editarVideoAtual();
+    }
+    
     carregarVideo(id) {
         const video = this.db.getVideo(id);
         if (!video) return;
+        
         this.videoAtual = video;
         this.db.incrementarViews(id);
         this.renderizarMedia(video);
@@ -261,11 +436,25 @@ class MeuTubeApp {
         document.getElementById('video-descricao').textContent = video.descricao;
         document.getElementById('video-views').innerHTML = `<i class="fas fa-eye"></i> ${video.views} visualizações`;
         document.getElementById('video-data').innerHTML = `<i class="fas fa-calendar"></i> ${video.data}`;
+        document.getElementById('video-autor').innerHTML = `<i class="fas fa-user"></i> ${video.autor}`;
         document.getElementById('like-count').textContent = this.db.getLikes(id);
         
         const btnFav = document.getElementById('btn-favoritar');
-        if (this.db.isFavorito(id)) { btnFav.classList.add('favorited'); btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritado'; }
-        else { btnFav.classList.remove('favorited'); btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritar'; }
+        if (this.db.isFavorito(id)) {
+            btnFav.classList.add('favorited');
+            btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
+        } else {
+            btnFav.classList.remove('favorited');
+            btnFav.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
+        }
+        
+        // Mostrar/esconder botão de editar
+        const btnEditar = document.getElementById('btn-editar-video');
+        if (usuarioLogado && video.autorEmail === usuarioLogado.email) {
+            btnEditar.style.display = 'flex';
+        } else {
+            btnEditar.style.display = 'none';
+        }
         
         this.carregarComentarios(id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -275,14 +464,21 @@ class MeuTubeApp {
         const lista = document.getElementById('lista-comentarios');
         const comentarios = this.db.getComentarios(videoId);
         lista.innerHTML = '';
-        if (comentarios.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#aaa; padding:20px;">Seja o primeiro a comentar!</p>'; return; }
+        
+        if (comentarios.length === 0) {
+            lista.innerHTML = '<p style="text-align:center; color:#aaa; padding:20px;">Seja o primeiro a comentar!</p>';
+            return;
+        }
+        
         comentarios.forEach(c => {
             const item = document.createElement('div');
             item.className = 'comentario-item';
             item.innerHTML = `
-                <div class="comentario-header"><span class="comentario-autor"><i class="fas fa-user-circle"></i> ${c.autor}</span><span>${c.data}</span></div>
+                <div class="comentario-header">
+                    <span class="comentario-autor"><i class="fas fa-user-circle"></i> ${c.autor}</span>
+                    <span>${c.data}</span>
+                </div>
                 <div class="comentario-texto">${c.texto}</div>
-                <button class="comentario-delete" onclick="app.removerComentario(${videoId}, ${c.id})"><i class="fas fa-trash"></i></button>
             `;
             lista.appendChild(item);
         });
@@ -291,95 +487,90 @@ class MeuTubeApp {
     adicionarComentario() {
         const input = document.getElementById('input-comentario');
         if (!input.value.trim() || !this.videoAtual) return;
-        this.db.adicionarComentario(this.videoAtual.id, input.value.trim());
+        
+        const autor = usuarioLogado ? usuarioLogado.nome : 'Visitante';
+        this.db.adicionarComentario(this.videoAtual.id, input.value.trim(), autor);
         input.value = '';
         this.carregarComentarios(this.videoAtual.id);
-        this.mostrarNotificacao('Comentário adicionado com sucesso!');
+        this.mostrarNotificacao('✓ Comentário publicado!');
     }
     
-    removerComentario(videoId, comentarioId) { this.db.removerComentario(videoId, comentarioId); this.carregarComentarios(videoId); }
     curtirVideo() {
         if (!this.videoAtual) return;
         document.getElementById('like-count').textContent = this.db.toggleLike(this.videoAtual.id);
         document.getElementById('btn-like').classList.toggle('liked');
     }
+    
     favoritarVideo() {
         if (!this.videoAtual) return;
         const isFav = this.db.toggleFavorito(this.videoAtual.id);
         const btn = document.getElementById('btn-favoritar');
-        if (isFav) { btn.classList.add('favorited'); btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado'; this.mostrarNotificacao('Adicionado aos favoritos!'); }
-        else { btn.classList.remove('favorited'); btn.innerHTML = '<i class="fas fa-heart"></i> Favoritar'; }
+        if (isFav) {
+            btn.classList.add('favorited');
+            btn.innerHTML = '<i class="fas fa-heart"></i> Favoritado';
+            this.mostrarNotificacao('✓ Adicionado aos favoritos!');
+        } else {
+            btn.classList.remove('favorited');
+            btn.innerHTML = '<i class="fas fa-heart"></i> Favoritar';
+        }
     }
     
     compartilharVideo() {
         if (!this.videoAtual) return;
-        const shareData = {
-            title: this.videoAtual.titulo + ' | MeuTube',
-            text: 'Confira este conteúdo exclusivo do Prof. Luciano Francisco: ' + this.videoAtual.descricao,
-            url: window.location.href.split('?')[0] + '?v=' + this.videoAtual.id
-        };
+        const url = window.location.href.split('?')[0] + '?v=' + this.videoAtual.id;
         
         if (navigator.share) {
-            navigator.share(shareData).catch(() => this.fallbackShare(shareData.url));
+            navigator.share({
+                title: this.videoAtual.titulo + ' | MeuTube',
+                text: this.videoAtual.descricao,
+                url: url
+            }).catch(() => this.copiarLink(url));
         } else {
-            this.fallbackShare(shareData.url);
+            this.copiarLink(url);
         }
     }
     
-    fallbackShare(url) {
+    copiarLink(url) {
         navigator.clipboard.writeText(url).then(() => {
-            this.mostrarNotificacao('Link copiado! Cole no WhatsApp. (A imagem de capa aparecerá automaticamente)');
+            this.mostrarNotificacao('✓ Link copiado! Compartilhe no WhatsApp/Facebook.');
         });
     }
     
     deletarVideoAtual() {
         if (!this.videoAtual) return;
-        if (confirm(`Tem certeza que deseja excluir "${this.videoAtual.titulo}"?`)) {
+        if (!usuarioLogado || this.videoAtual.autorEmail !== usuarioLogado.email) {
+            alert('Você só pode excluir seus próprios vídeos!');
+            return;
+        }
+        if (confirm('Tem certeza que deseja excluir este vídeo permanentemente?')) {
             this.db.deletarVideo(this.videoAtual.id);
-            this.mostrarNotificacao('Vídeo excluído com sucesso!');
+            this.mostrarNotificacao('✓ Vídeo excluído com sucesso!');
             this.videoAtual = null;
             document.getElementById('youtube-player').innerHTML = '';
             document.getElementById('native-player').src = '';
-            document.getElementById('video-titulo').textContent = 'Vídeo excluído';
             this.renderizarListaVideos();
         }
     }
     
     deletarVideo(id) {
+        if (!usuarioLogado) {
+            alert('Faça login para excluir vídeos!');
+            return;
+        }
+        const video = this.db.getVideo(id);
+        if (video && video.autorEmail !== usuarioLogado.email) {
+            alert('Você só pode excluir seus próprios vídeos!');
+            return;
+        }
         if (confirm('Deseja excluir este vídeo permanentemente?')) {
             this.db.deletarVideo(id);
             if (this.videoAtual && this.videoAtual.id === id) {
                 this.videoAtual = null;
                 document.getElementById('youtube-player').innerHTML = '';
-                document.getElementById('native-player').src = '';
             }
             this.renderizarListaVideos();
-            this.mostrarNotificacao('Vídeo excluído!');
+            this.mostrarNotificacao('✓ Vídeo excluído!');
         }
-    }
-    
-    adicionarNovoVideo() {
-        const titulo = document.getElementById('novo-titulo').value;
-        let url = document.getElementById('novo-url').value;
-        const fileInput = document.getElementById('novo-arquivo');
-        const thumb = document.getElementById('novo-thumb').value || 'https://via.placeholder.com/320x180/1a1a1a/ff0000?text=MeuTube';
-        const descricao = document.getElementById('novo-descricao').value;
-        const categoria = document.getElementById('novo-categoria').value;
-        
-        if (fileInput.files.length > 0) {
-            url = URL.createObjectURL(fileInput.files[0]);
-        } else if (!url) {
-            alert('Por favor, insira uma URL ou faça upload de um arquivo.');
-            return;
-        }
-        
-        this.db.adicionarVideo({ titulo, url, thumb, descricao, categoria });
-        this.renderizarListaVideos();
-        this.carregarVideo(Date.now());
-        
-        document.getElementById('modal-adicionar').style.display = 'none';
-        document.getElementById('form-novo-video').reset();
-        this.mostrarNotificacao('Vídeo adicionado com sucesso! 🎬');
     }
     
     pesquisar() {
@@ -397,5 +588,6 @@ class MeuTubeApp {
     }
 }
 
+// Inicializar
 let app;
 document.addEventListener('DOMContentLoaded', () => { app = new MeuTubeApp(); });
