@@ -8,309 +8,247 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- TELA DE AUTENTICAÇÃO -->
-    <div id="auth-screen">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="logo">
-                    <i class="fab fa-youtube"></i>
-                    <h1>Meu<span>Tube</span></h1>
+
+<!-- TELA DE LOGIN/CADASTRO -->
+<div id="tela-login">
+    <div class="login-box">
+        <div class="login-logo">
+            <i class="fab fa-youtube" style="color:#ff0000;font-size:50px;"></i>
+            <h1>Meu<span>Tube</span></h1>
+        </div>
+        
+        <div class="login-tabs">
+            <button class="tab-btn active" onclick="mostrarTab('entrar')">Entrar</button>
+            <button class="tab-btn" onclick="mostrarTab('cadastrar')">Cadastrar</button>
+        </div>
+
+        <!-- FORMULÁRIO DE LOGIN -->
+        <form id="form-login" class="form-ativo">
+            <div class="campo">
+                <label><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="login-email" required placeholder="seu@email.com">
+            </div>
+            <div class="campo">
+                <label><i class="fas fa-lock"></i> Senha</label>
+                <input type="password" id="login-senha" required placeholder="Sua senha">
+            </div>
+            <button type="submit" class="btn-entrar">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            <p class="msg-erro" id="msg-login-erro"></p>
+        </form>
+
+        <!-- FORMULÁRIO DE CADASTRO -->
+        <form id="form-cadastro" style="display:none;">
+            <div class="campo">
+                <label><i class="fas fa-user"></i> Nome</label>
+                <input type="text" id="cad-nome" required placeholder="Seu nome">
+            </div>
+            <div class="campo">
+                <label><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="cad-email" required placeholder="seu@email.com">
+            </div>
+            <div class="campo">
+                <label><i class="fas fa-lock"></i> Senha</label>
+                <input type="password" id="cad-senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+            </div>
+            <div class="campo">
+                <label><i class="fas fa-lock"></i> Confirmar Senha</label>
+                <input type="password" id="cad-confirm" required placeholder="Repita a senha">
+            </div>
+            <button type="submit" class="btn-entrar">
+                <i class="fas fa-user-plus"></i> Criar Conta
+            </button>
+            <p class="msg-erro" id="msg-cad-erro"></p>
+        </form>
+    </div>
+</div>
+
+<!-- APLICAÇÃO PRINCIPAL -->
+<div id="app" style="display:none;">
+    
+    <!-- HEADER -->
+    <header id="topo">
+        <div class="topo-esq">
+            <button class="btn-menu" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fab fa-youtube"></i>
+                <h1>Meu<span>Tube</span></h1>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="busca" placeholder="Pesquisar vídeos...">
+            <button onclick="buscar()"><i class="fas fa-search"></i></button>
+        </div>
+
+        <nav id="menu-nav" class="menu-nav">
+            <ul>
+                <li><a href="#" class="ativo" data-pagina="inicio"><i class="fas fa-home"></i> Início</a></li>
+                <li><a href="#" data-pagina="favoritos"><i class="fas fa-heart"></i> Favoritos</a></li>
+                <li><a href="#" data-pagina="cursos"><i class="fas fa-graduation-cap"></i> Cursos</a></li>
+                <li><a href="#" data-pagina="canal"><i class="fas fa-user-circle"></i> Meu Canal</a></li>
+                <li><a href="#" id="btn-sair"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+            </ul>
+        </nav>
+
+        <div class="user-badge">
+            <i class="fas fa-user-circle"></i>
+            <span id="nome-user"></span>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO -->
+    <main id="conteudo">
+        
+        <!-- PERFIL DO CANAL -->
+        <section id="perfil-canal" style="display:none;">
+            <div class="capa-canal" id="capa-canal">
+                <img id="img-capa" src="" alt="Capa">
+                <button class="btn-alterar-capa" onclick="alterarCapa()">
+                    <i class="fas fa-camera"></i> Alterar Capa
+                </button>
+            </div>
+            <div class="info-canal">
+                <div class="avatar-canal"><i class="fas fa-user-circle"></i></div>
+                <div class="dados-canal">
+                    <h2 id="nome-canal">Meu Canal</h2>
+                    <p id="desc-canal">Descrição do canal</p>
+                    <button class="btn-editar-canal" onclick="editarCanal()">
+                        <i class="fas fa-edit"></i> Editar Canal
+                    </button>
                 </div>
-                <p>Sua plataforma de vídeos pessoal</p>
+            </div>
+            <div class="stats-canal">
+                <div class="stat"><i class="fas fa-video"></i> <span id="stat-videos">0</span> vídeos</div>
+                <div class="stat"><i class="fas fa-eye"></i> <span id="stat-views">0</span> views</div>
+            </div>
+        </section>
+
+        <!-- PLAYER -->
+        <section id="player-area">
+            <div class="video-box">
+                <div id="player-yt"></div>
+                <video id="player-mp4" controls style="display:none;"></video>
             </div>
 
-            <div class="auth-tabs">
-                <button class="tab-btn active" onclick="app.showTab('login')">
-                    <i class="fas fa-sign-in-alt"></i> Entrar
-                </button>
-                <button class="tab-btn" onclick="app.showTab('register')">
-                    <i class="fas fa-user-plus"></i> Cadastrar
-                </button>
+            <div class="info-video">
+                <h1 id="v-titulo">Título do Vídeo</h1>
+                <div class="meta-video">
+                    <span><i class="fas fa-eye"></i> <span id="v-views">0</span> views</span>
+                    <span><i class="fas fa-calendar"></i> <span id="v-data">--/--/----</span></span>
+                    <span><i class="fas fa-user"></i> <span id="v-autor">--</span></span>
+                </div>
+                <p id="v-desc" class="desc-video">Descrição</p>
+                
+                <div class="acoes-video">
+                    <button id="btn-like" onclick="curtir()"><i class="fas fa-thumbs-up"></i> <span id="qtd-like">0</span></button>
+                    <button id="btn-fav" onclick="favoritar()"><i class="fas fa-heart"></i> Favoritar</button>
+                    <button onclick="compartilhar()"><i class="fas fa-share"></i> Compartilhar</button>
+                    <button id="btn-edit" onclick="editarVideoAtual()" style="display:none;"><i class="fas fa-edit"></i> Editar</button>
+                    <button id="btn-del" onclick="excluirVideoAtual()" style="display:none;"><i class="fas fa-trash"></i> Excluir</button>
+                </div>
             </div>
 
-            <form id="login-form" class="auth-form active">
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email:</label>
-                    <input type="email" id="login-email" required placeholder="seu@email.com">
+            <!-- DOAÇÃO -->
+            <div class="doacao">
+                <h3><i class="fas fa-hand-holding-heart"></i> Apoie o MeuTube</h3>
+                <p>Aqui você não precisa pagar por tráfego! Seu conteúdo será visto no Brasil e no mundo.</p>
+                <p><strong>Doações são opcionais e não afetam a visibilidade.</strong></p>
+                <button class="btn-doar"><i class="fas fa-donate"></i> Fazer Doação</button>
+            </div>
+
+            <!-- COMENTÁRIOS -->
+            <div class="comentarios">
+                <h3><i class="fas fa-comments"></i> Comentários</h3>
+                <textarea id="txt-comentario" placeholder="Escreva um comentário..."></textarea>
+                <button class="btn-comentar" onclick="comentar()"><i class="fas fa-paper-plane"></i> Comentar</button>
+                <div id="lista-comentarios"></div>
+            </div>
+        </section>
+
+        <!-- VÍDEOS -->
+        <aside id="lista-area">
+            <h3 id="titulo-lista"><i class="fas fa-list"></i> Meus Vídeos</h3>
+            <div id="grid-videos" class="grid-videos"></div>
+        </aside>
+    </main>
+
+    <footer id="rodape">
+        <p>© 2026 <span>MeuTube</span> - Todos os direitos reservados</p>
+    </footer>
+
+    <!-- MODAL VÍDEO -->
+    <div id="modal-video" class="modal">
+        <div class="modal-box">
+            <span class="fechar" onclick="fecharModal()">&times;</span>
+            <h2 id="titulo-modal"><i class="fas fa-plus-circle"></i> Publicar Vídeo</h2>
+            <form id="form-video">
+                <input type="hidden" id="edit-id">
+                <div class="campo-modal">
+                    <label>Título</label>
+                    <input type="text" id="inp-titulo" required>
                 </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Senha:</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="login-senha" required placeholder="••••••••">
-                        <button type="button" class="toggle-password" onclick="app.togglePassword('login-senha')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
+                <div class="campo-modal">
+                    <label>URL do YouTube ou MP4</label>
+                    <input type="url" id="inp-url" placeholder="https://youtu.be/...">
                 </div>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> Entrar
-                </button>
+                <div class="campo-modal">
+                    <label>Ou Upload (temporário)</label>
+                    <input type="file" id="inp-arquivo" accept="video/*">
+                </div>
+                <div class="campo-modal">
+                    <label>Thumbnail (opcional)</label>
+                    <input type="url" id="inp-thumb" placeholder="Deixe vazio para auto">
+                </div>
+                <div class="campo-modal">
+                    <label>Descrição</label>
+                    <textarea id="inp-desc" rows="3"></textarea>
+                </div>
+                <div class="campo-modal">
+                    <label>Categoria</label>
+                    <select id="inp-cat">
+                        <option value="geral">Geral</option>
+                        <option value="curso">Curso</option>
+                        <option value="tutorial">Tutorial</option>
+                        <option value="motivacional">Motivacional</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-salvar"><i class="fas fa-save"></i> Publicar</button>
             </form>
-
-            <form id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label><i class="fas fa-user"></i> Nome Completo:</label>
-                    <input type="text" id="register-nome" required placeholder="Seu nome">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email:</label>
-                    <input type="email" id="register-email" required placeholder="seu@email.com">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Senha:</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="register-senha" required placeholder="Mínimo 6 caracteres" minlength="6">
-                        <button type="button" class="toggle-password" onclick="app.togglePassword('register-senha')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Confirmar Senha:</label>
-                    <input type="password" id="register-confirm" required placeholder="Repita a senha">
-                </div>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-user-plus"></i> Criar Conta
-                </button>
-            </form>
-
-            <div class="security-info">
-                <i class="fas fa-shield-alt"></i> Ambiente seguro. Dados protegidos.
-            </div>
         </div>
     </div>
 
-    <!-- APLICAÇÃO PRINCIPAL -->
-    <div id="app-container" style="display:none;">
-        <!-- HEADER COM MENU RESPONSIVO -->
-        <header id="topo">
-            <div class="header-left">
-                <button class="menu-toggle" onclick="app.toggleMenu()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="logo">
-                    <i class="fab fa-youtube"></i>
-                    <h1>Meu<span>Tube</span></h1>
+    <!-- MODAL CANAL -->
+    <div id="modal-canal" class="modal">
+        <div class="modal-box">
+            <span class="fechar" onclick="fecharModalCanal()">&times;</span>
+            <h2><i class="fas fa-user-edit"></i> Editar Canal</h2>
+            <form id="form-canal">
+                <div class="campo-modal">
+                    <label>Nome do Canal</label>
+                    <input type="text" id="canal-nome" required>
                 </div>
-            </div>
-
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="Pesquisar vídeos...">
-                <button onclick="app.pesquisar()"><i class="fas fa-search"></i></button>
-            </div>
-
-            <nav id="menu" class="menu">
-                <ul>
-                    <li><a href="#" class="active" data-page="inicio"><i class="fas fa-home"></i> <span>Início</span></a></li>
-                    <li><a href="#" data-page="favoritos"><i class="fas fa-heart"></i> <span>Favoritos</span></a></li>
-                    <li><a href="#" data-page="cursos"><i class="fas fa-graduation-cap"></i> <span>Cursos</span></a></li>
-                    <li><a href="#" data-page="canal"><i class="fas fa-user-circle"></i> <span>Meu Canal</span></a></li>
-                    <li><a href="#" id="btn-sair"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a></li>
-                </ul>
-            </nav>
-
-            <div class="user-info">
-                <i class="fas fa-user-circle"></i>
-                <span id="user-name"></span>
-            </div>
-        </header>
-
-        <main id="conteudo-principal">
-            <!-- PERFIL DO CANAL -->
-            <section id="canal-profile" style="display:none;">
-                <div class="channel-header">
-                    <div class="channel-cover" id="channel-cover">
-                        <img src="" alt="Capa do Canal" id="cover-image">
-                        <div class="cover-overlay">
-                            <button class="btn-edit-cover" onclick="app.editarCapa()">
-                                <i class="fas fa-camera"></i> Alterar Capa
-                            </button>
-                        </div>
-                    </div>
-                    <div class="channel-info">
-                        <div class="channel-avatar">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="channel-details">
-                            <h2 id="channel-name">Nome do Canal</h2>
-                            <p id="channel-desc">Descrição do canal</p>
-                            <button class="btn-edit-profile" onclick="app.editarPerfil()">
-                                <i class="fas fa-edit"></i> Editar Canal
-                            </button>
-                        </div>
-                    </div>
+                <div class="campo-modal">
+                    <label>Descrição</label>
+                    <textarea id="canal-desc" rows="3"></textarea>
                 </div>
-                <div class="channel-stats">
-                    <div class="stat">
-                        <i class="fas fa-video"></i>
-                        <span id="total-videos">0</span> vídeos
-                    </div>
-                    <div class="stat">
-                        <i class="fas fa-eye"></i>
-                        <span id="total-views">0</span> visualizações
-                    </div>
+                <div class="campo-modal">
+                    <label>URL da Capa</label>
+                    <input type="url" id="canal-capa" placeholder="https://...">
                 </div>
-            </section>
-
-            <!-- PLAYER DE VÍDEO -->
-            <section id="player-section">
-                <div class="video-container">
-                    <div id="video-wrapper">
-                        <div id="youtube-player"></div>
-                        <video id="native-player" controls style="display:none;"></video>
-                    </div>
-                    <button id="play-overlay" onclick="app.togglePlay()">
-                        <i class="fas fa-play"></i>
-                    </button>
-                </div>
-
-                <div class="video-info">
-                    <h1 id="video-titulo">Título do Vídeo</h1>
-                    <div class="video-meta">
-                        <span><i class="fas fa-eye"></i> <span id="video-views">0</span> visualizações</span>
-                        <span><i class="fas fa-calendar"></i> <span id="video-data">--/--/----</span></span>
-                        <span><i class="fas fa-user"></i> <span id="video-autor">undefined</span></span>
-                    </div>
-                    <p id="video-descricao" class="video-description">Descrição do vídeo</p>
-                    
-                    <div class="video-actions">
-                        <button id="btn-like" onclick="app.curtirVideo()">
-                            <i class="fas fa-thumbs-up"></i> <span id="like-count">0</span>
-                        </button>
-                        <button id="btn-favorito" onclick="app.favoritarVideo()">
-                            <i class="fas fa-heart"></i> Favoritar
-                        </button>
-                        <button onclick="app.compartilharVideo()">
-                            <i class="fas fa-share"></i> Compartilhar
-                        </button>
-                        <button id="btn-editar" onclick="app.editarVideoAtual()" style="display:none;">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button id="btn-excluir" onclick="app.excluirVideoAtual()" style="display:none;">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                    </div>
-                </div>
-
-                <!-- DOAÇÃO -->
-                <div class="doacao-box">
-                    <h3><i class="fas fa-hand-holding-heart"></i> Apoie o MeuTube</h3>
-                    <p>Aqui você não precisa pagar por tráfego! Seu conteúdo será visto no Brasil e no mundo.</p>
-                    <p><strong>Doações são opcionais e não afetam a visibilidade.</strong></p>
-                    <button class="btn-doar" onclick="app.mostrarDoacao()">
-                        <i class="fas fa-donate"></i> Fazer Doação
-                    </button>
-                </div>
-
-                <!-- COMENTÁRIOS -->
-                <div class="comentarios-section">
-                    <h3><i class="fas fa-comments"></i> Comentários</h3>
-                    <div class="comentario-form">
-                        <textarea id="input-comentario" placeholder="Escreva um comentário..."></textarea>
-                        <button onclick="app.adicionarComentario()">
-                            <i class="fas fa-paper-plane"></i> Comentar
-                        </button>
-                    </div>
-                    <div id="lista-comentarios"></div>
-                </div>
-            </section>
-
-            <!-- VÍDEOS RELACIONADOS -->
-            <aside id="relacionados">
-                <h3><i class="fas fa-list"></i> Próximos Vídeos</h3>
-                <div id="lista-videos" class="video-grid"></div>
-            </aside>
-        </main>
-
-        <footer id="footer">
-            <p>© 2026 <span>MeuTube</span> - Todos os direitos reservados</p>
-            <p>Publique grátis. SEO otimizado automaticamente.</p>
-        </footer>
-
-        <!-- MODAL ADICIONAR/EDITAR VÍDEO -->
-        <div id="modal-video" class="modal">
-            <div class="modal-content">
-                <span class="close-modal" onclick="app.fecharModal()">&times;</span>
-                <h2 id="modal-title"><i class="fas fa-plus-circle"></i> Publicar Vídeo</h2>
-                <form id="form-video">
-                    <input type="hidden" id="video-id-edit">
-                    
-                    <div class="form-group">
-                        <label>Título:</label>
-                        <input type="text" id="video-titulo-input" required placeholder="Título do vídeo">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>URL do YouTube ou MP4:</label>
-                        <input type="url" id="video-url" placeholder="https://youtu.be/...">
-                        <small>Thumbnail será extraída automaticamente do YouTube</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Ou faça upload (temporário):</label>
-                        <input type="file" id="video-arquivo" accept="video/*">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Thumbnail (opcional):</label>
-                        <input type="url" id="video-thumb" placeholder="Deixe em branco para auto">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Descrição:</label>
-                        <textarea id="video-descricao-input" rows="3" placeholder="Descrição completa..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Categoria:</label>
-                        <select id="video-categoria">
-                            <option value="geral">Geral</option>
-                            <option value="curso">Curso</option>
-                            <option value="tutorial">Tutorial</option>
-                            <option value="motivacional">Motivacional</option>
-                            <option value="consultoria">Consultoria</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i> Publicar
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="btn-salvar"><i class="fas fa-save"></i> Salvar</button>
+            </form>
         </div>
-
-        <!-- MODAL EDITAR PERFIL -->
-        <div id="modal-perfil" class="modal">
-            <div class="modal-content">
-                <span class="close-modal" onclick="app.fecharModalPerfil()">&times;</span>
-                <h2><i class="fas fa-user-edit"></i> Editar Canal</h2>
-                <form id="form-perfil">
-                    <div class="form-group">
-                        <label>Nome do Canal:</label>
-                        <input type="text" id="perfil-nome" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Descrição do Canal:</label>
-                        <textarea id="perfil-desc" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>URL da Capa:</label>
-                        <input type="url" id="perfil-capa" placeholder="https://...">
-                        <small>Deixe em branco para manter a atual</small>
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i> Salvar Alterações
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- BOTÃO FLUTUANTE -->
-        <button class="fab" onclick="app.abrirModalVideo()" title="Publicar Vídeo">
-            <i class="fas fa-plus"></i>
-        </button>
     </div>
 
-    <script src="meutube.js"></script>
+    <button class="fab" onclick="abrirModalVideo()" title="Publicar Vídeo">
+        <i class="fas fa-plus"></i>
+    </button>
+</div>
+
+<script src="meutube.js"></script>
 </body>
 </html>
