@@ -36,7 +36,7 @@ Uma plataforma moderna e completa de vídeos, inspirada no YouTube e Netflix, cr
 - **CSS3** - Grid, Flexbox, Animações, Variáveis CSS
 - **JavaScript ES6+** - Classes, Arrow Functions, LocalStorage API
 - **Font Awesome** - Ícones profissionais
-- **Local Storage** - Persistência de dados
+- **Local Storage** - Persistência de dados.
 
 ##  Link
 https://lucianofs.github.io/meutube/
