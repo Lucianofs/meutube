@@ -39,7 +39,7 @@ Uma plataforma moderna e completa de vídeos, inspirada no YouTube e Netflix, cr
 - **Local Storage** - Persistência de dados.
 
 ##  Link
-https://lucianofs.github.io/meutube/
+https://lucianofs.github.io/meutube
 
 ## 📦 Como Usar
 
