@@ -1,5 +1,5 @@
 
-# 🎬 MeuTube - Plataforma de Vídeos Profissional
+# 🎬 MeuTube - Plataforma de Vídeos Profissional - Projeto em Desenvolvimento
 
 ## CFO da Alma e dos Negócios
 
