@@ -43,7 +43,7 @@ Uma plataforma moderna e completa de vídeos, inspirada no YouTube e Netflix, cr
 
 <p align="center">
   <a href="https://lucianofs.github.io/meutube/">
-    <strong><font size="5" color="#0066cc">🏨 CLIQUE AQUI PARA ACESSAR O HOTEL PRA VOCÊ</font></strong>
+    <strong><font size="5" color="#0066cc">🏨 CLIQUE AQUI PARA ACESSAR O MEU TUBE</font></strong>
   </a>
 </p>
 
